@@ -1,0 +1,16 @@
+# Core dependencies
+torch>=1.13
+torchvision
+numpy
+scipy
+matplotlib
+scikit-learn
+
+# For 3D point cloud loading and processing
+trimesh
+h5py
+
+# Optional but useful for data augmentation and visualization
+open3d
+seaborn
+tqdm
