@@ -50,7 +50,7 @@ class Symmetrization_Net(nn.Module):
 
 
 class Sampled_Symmetrization_Net(nn.Module):
-    def __init__(self,d = 10):
+    def __init__(self,d = 10,num_samples = 20):
         super().__init__()
         self.flatten = nn.Flatten()
         self.linear = nn.Sequential(
@@ -58,11 +58,12 @@ class Sampled_Symmetrization_Net(nn.Module):
             nn.ReLU(),
             nn.Linear(32, 4)
         )
+        self.num_samples = num_samples
 
     def forward(self, x):
         N,_ = x.size()
         x_ = torch.zeros((4,1))
-        it = create_permutations_sampled(x,N)
+        it = create_permutations_sampled(x,self.num_samples)
         for perm in it:
             x_ += self.linear(x[perm,:])
         

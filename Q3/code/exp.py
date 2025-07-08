@@ -4,18 +4,12 @@ from torch import nn
 from itertools import permutations
 import numpy as np
 from utils import *
+from models import *
 
-x = torch.randn((10,2))
 
-N,_ = x.size()
 
-#norms = torch.linalg.norm(x,dim=1)
-_, indices = torch.sort(x[:,0],descending=True)
-print(x)
+a = (test_canonization_net,Canonization_Net)
+b = (test_symmetrization_net,Symmetrization_Net)
+c = (test_sampled_symmetrization_net,Symmetrization_Net)
 
-x = x[indices,:]
 
-#print(indices)
-#print(norms)
-print(x)
-#print(torch.linalg.norm(x,dim=1))
