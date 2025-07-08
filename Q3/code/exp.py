@@ -3,16 +3,19 @@ import torch.nn.functional as F
 from torch import nn
 from itertools import permutations
 import numpy as np
+from utils import *
 
-x = torch.randn((1000,2))
+x = torch.randn((10,2))
 
 N,_ = x.size()
-permutations_ = np.array(list(permutations(np.arange(0,N))))
 
+#norms = torch.linalg.norm(x,dim=1)
+_, indices = torch.sort(x[:,0],descending=True)
+print(x)
 
-def create_permutations_sampled(x:torch.tensor,K:int):
-    N,_ = x.size()
-    return np.array(list(permutations(np.arange(0,N))))[:,np.arange(0,N)][np.random.randint(N,size=K),:]
+x = x[indices,:]
 
-print(create_permutations_sampled(x,3))
-
+#print(indices)
+#print(norms)
+print(x)
+#print(torch.linalg.norm(x,dim=1))
