@@ -74,6 +74,14 @@ def test_equivariance(Linear_eq_layer,d_in=10, n=10, tol=1e-5):
 
     return torch.allclose(y, y_perm, atol=tol)
 
+def test_invariant_net(model_class, d_in=10, n=6, tol=1e-5):
+    net = model_class(d_in=d_in)
+    x = torch.randn(n, d_in)
+    x_perm = x[torch.randperm(n)]
+    y = net(x)
+    y_perm = net(x_perm)
+    return torch.allclose(y, y_perm, atol=tol)
+
 
 def run_test(test_args:tuple,num_tests = 100):
     res = 0

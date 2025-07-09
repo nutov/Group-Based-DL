@@ -80,9 +80,19 @@ class Linear_eq_layer(nn.Module):
     
 
 class Linear_eq_Net(nn.Module):
-    def __init__(self, d_in=10, d_hidden=32):
+    def __init__(self, d_in=10, d_hidden=32 , d_out = 4):
         super().__init__()
+        self.equiv = nn.Sequential(Linear_eq_layer(d_in,d_hidden),
+                                   nn.ReLU(),
+                                   Linear_eq_layer(d_hidden,d_hidden)
+        )
+
+        self.post_pool = nn.Sequential(
+            nn.ReLU(),
+            nn.Linear(d_hidden, d_out))
         
         
     def forward(self, x):  # x is (n, d_in)
-        pass
+        x_eq = self.equiv(x)
+        x_pool = x_eq.sum(dim=0)
+        return self.post_pool(x_pool)
