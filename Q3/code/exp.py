@@ -21,3 +21,5 @@ def main():
 
 
 print(test_equivariance(Linear_eq_layer))
+print(test_invariant_net(Linear_eq_Net))
+print(torch.cuda.is_available())
