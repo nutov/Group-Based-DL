@@ -12,7 +12,7 @@ def create_permutations_sampled(x:torch.tensor,K:int):
         yield np.random.permutation(N)
 
 
-def test_canonization_net(CanonizationNet, d=10, n=5, tol=1e-5):
+def test_canonization_net(CanonizationNet, d=10, n=20, tol=1e-5):
     net = CanonizationNet(d=d)
     x = torch.randn(n, d)
     perm = torch.randperm(n)
@@ -25,11 +25,11 @@ def test_canonization_net(CanonizationNet, d=10, n=5, tol=1e-5):
     return torch.allclose(y, y_perm, atol=tol)
 
 
-def test_symmetrization_net(SymmetrizationNet, d=10, n=4, tol=1e-5):  # small n for factorial runtime
+def test_symmetrization_net(SymmetrizationNet, d=3, n=5, tol=1e-5):  # small n for factorial runtime
     net = SymmetrizationNet(d=d)
     x = torch.randn(n, d)
     perm = torch.randperm(n)
-    x_perm = x[perm]
+    x_perm = x[perm,:]
     
     y = net(x)
     y_perm = net(x_perm)
@@ -38,8 +38,8 @@ def test_symmetrization_net(SymmetrizationNet, d=10, n=4, tol=1e-5):  # small n 
 
 
 
-def test_sampled_symmetrization_net(SampledSymmetrizationNet, d=10, n=6, num_samples=30, tol=1e-3):
-    net = SampledSymmetrizationNet(d=d, num_samples=num_samples)
+def test_sampled_symmetrization_net(SampledSymmetrizationNet, d=5, n=7, num_samples=750, tol=1e-3):
+    net = SampledSymmetrizationNet(d=d,num_samples = num_samples)
     x = torch.randn(n, d)
     perm = torch.randperm(n)
     x_perm = x[perm]
@@ -62,13 +62,31 @@ def test_equivariance_equivariant_layer(LinearEquivariantLayer,d_in=10, d_out=4,
     
     return torch.allclose(y[perm], y_perm, atol=tol)
 
-def test_deepsets_invariance(d_in=10, n=6, tol=1e-5):
-    net = DeepSets(d_in=d_in)
+
+def test_equivariance(Linear_eq_layer,d_in=10, n=10, tol=1e-5):
+    net = Linear_eq_layer(d_in=d_in)
     x = torch.randn(n, d_in)
     perm = torch.randperm(n)
     x_perm = x[perm]
 
-    y = net(x)
+    y = net(x)[perm]
     y_perm = net(x_perm)
 
     return torch.allclose(y, y_perm, atol=tol)
+
+def test_invariant_net(model_class, d_in=10, n=6, tol=1e-5):
+    net = model_class(d_in=d_in)
+    x = torch.randn(n, d_in)
+    x_perm = x[torch.randperm(n)]
+    y = net(x)
+    y_perm = net(x_perm)
+    return torch.allclose(y, y_perm, atol=tol)
+
+
+def run_test(test_args:tuple,num_tests = 100):
+    res = 0
+    test_func,net = test_args
+    for _ in range(num_tests):
+        if not test_func(net):
+            res+=1
+    return res/num_tests
