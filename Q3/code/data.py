@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
+from torchvision import datasets, transforms
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -30,6 +31,14 @@ def create_dataset(n:int = 1000 ,d:int = 100):
     return Dataset(x,y)
 
 def create_dataloader(n:int = 1000 ,d:int = 100):
-    return torch.utils.data.DataLoader(dataset=create_dataset(n,d),
-                                           batch_size=10,
-                                           shuffle=True)
+    data = create_dataset(n,d)
+    return torch.utils.data.DataLoader(dataset=data ,
+                                           batch_size=64 ,
+                                           shuffle=True )
+
+
+
+def rand_permute(X):
+    N,d = X.size()
+    perm = torch.randperm(N)
+    return  X[perm,:]
