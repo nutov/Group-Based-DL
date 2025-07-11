@@ -1,0 +1,252 @@
+% TODO: change def to newcommand
+
+% sectioning and structure
+% \theoremstyle{italic}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{problem}[theorem]{Problem}
+%\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{construction}[theorem]{Construction}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{xca}[theorem]{Exercise}
+\newtheorem{comments}[theorem]{Comments}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{thm}{\protect\theoremname}
+%\theoremstyle{plain}
+\newtheorem{lem}[thm]{\protect\lemmaname}
+
+\newcommand{\zerob}{\mathbf{0}}
+\newcommand{\oneb}{\mathbf{1}}%
+
+\newcommand{\snr}{\text{SNR}}
+\global\long\def\norma#1{\left\Vert #1\right\Vert }%
+
+\newcommand{\Ab}{\mathbf{A}}%
+\newcommand{\ab}{\mathbf{a}}%
+
+\newcommand{\Bb}{\mathbf{B}}%
+\newcommand{\bb}{\mathbf{b}}%
+
+\newcommand{\Cb}{\mathbf{C}}%
+\newcommand{\cb}{\mathbf{c}}%
+
+\newcommand{\Db}{\mathbf{D}}%
+\newcommand{\db}{\mathbf{d}}%
+
+\newcommand{\Eb}{\mathbf{E}}%
+\newcommand{\eb}{\mathbf{e}}%
+
+\newcommand{\Fb}{\mathbf{F}}%
+\newcommand{\fb}{\mathbf{f}}%
+
+\newcommand{\Gb}{\mathbf{G}}%
+\newcommand{\gb}{\mathbf{g}}%
+
+\newcommand{\Hb}{\mathbf{H}}%
+\newcommand{\hb}{\mathbf{h}}%
+
+\newcommand{\Ib}{\mathbf{I}}%
+\newcommand{\ib}{\mathbf{i}}%
+
+\newcommand{\Jb}{\mathbf{J}}%
+\newcommand{\jb}{\mathbf{j}}%
+
+\newcommand{\Kb}{\mathbf{K}}%
+\newcommand{\kb}{\mathbf{k}}%
+
+\newcommand{\Lb}{\mathbf{L}}%
+\newcommand{\lb}{\mathbf{l}}%
+
+\newcommand{\Mb}{\mathbf{M}}%
+\newcommand{\mb}{\mathbf{m}}%
+
+\newcommand{\Nb}{\mathbf{N}}%
+\newcommand{\nb}{\mathbf{n}}%
+
+\newcommand{\Ob}{\mathbf{O}}%
+\newcommand{\ob}{\mathbf{o}}%
+
+\newcommand{\Pb}{\mathbf{P}}%
+\newcommand{\pb}{\mathbf{p}}%
+
+\newcommand{\Qb}{\mathbf{Q}}%
+\newcommand{\qb}{\mathbf{q}}%
+
+\newcommand{\Rb}{\mathbf{R}}%
+\newcommand{\rb}{\mathbf{r}}%
+
+\newcommand{\Sb}{\mathbf{S}}%
+\renewcommand{\sb}{\mathbf{s}}%
+
+\newcommand{\Tb}{\mathbf{T}}%
+\newcommand{\tb}{\mathbf{t}}%
+
+\newcommand{\Ub}{\mathbf{U}}%
+\newcommand{\ub}{\mathbf{u}}%
+
+\newcommand{\Vb}{\mathbf{V}}%
+\newcommand{\vb}{\mathbf{v}}%
+
+\newcommand{\Wb}{\mathbf{W}}%
+\newcommand{\wb}{\mathbf{w}}%
+
+\newcommand{\Xb}{\mathbf{X}}%
+\newcommand{\xb}{\mathbf{x}}%
+
+\newcommand{\Yb}{\mathbf{Y}}%
+\newcommand{\yb}{\mathbf{y}}%
+
+\newcommand{\Zb}{\mathbf{Z}}%
+\newcommand{\zb}{\mathbf{z}}%
+
+\newcommand{\RF}{\mathbb{R}}% rationals
+
+\newcommand{\CF}{\mathbb{C}}% complex
+
+\newcommand{\IF}{\mathbb{I}}% imaginary
+
+\newcommand{\NF}{\mathbb{N}}% natural
+
+\newcommand{\define}{\triangleq}%
+\newcommand{\const}{\text{const}}%
+\newcommand{\argThis}[3]
+{
+	\underset{#2}{#1}
+	\left \lbrace #3 \right \rbrace
+}
+\newcommand{\argmax}[2]{\argThis{\text{argmax}}{#1}{#2}}
+\newcommand{\argmin}[2]{\argThis{\text{argmin}}{#1}{#2}}
+\newcommand{\defineInline}[2]{\underset{#2}{\underbrace{#1}}}
+% Shortcuts and operators
+
+\renewcommand{\=}[1]{\underset{#1}{=}}%
+
+\newcommand{\intX}{\intop_{\Omega}}%
+\newcommand{\inttheta}{\intop_{\Theta}}%
+\newcommand{\intone}{\intop_{-1}^{1}}%
+\newcommand{\intinf}{\intop_{-\infty}^{\infty}}%
+
+% Statistics
+\newcommand{\tetahat}{\hat{\boldsymbol{\theta}}}%
+\newcommand{\cnormaldistribution}[2]{\mathcal{N}^{c}\left(#1,#2\right)}%
+\newcommand{\normaldistribution}[2]{\mathcal{N}\left(#1,#2\right)}%
+\renewcommand{\tt}{\boldsymbol{\theta}}%
+\newcommand{\var}{\text{Var}}%
+\newcommand{\E}{\mathbb{E}}%
+\newcommand{\pp}{\mathbb{E}}%
+\newcommand{\Ehat}[1]{\hat{\text{\ensuremath{\E}}}\left[#1\right]}%
+\newcommand{\cov}{\text{Cov}}%
+\newcommand{\pdf}[1]{f\left(#1\right)}%
+\newcommand{\mse}{\text{MSE}}%
+\newcommand{\varnoise}{\sigma^{2}}%
+\newcommand{\varalpha}{\sigma_{a}^{2}}%
+\newcommand{\pr}{\mathbb{P}}%
+\newcommand{\independent}{\perp \!\!\! \perp}
+
+\newcommand{\thetaml}{\hat{\theta}_{ML}}%
+%\newcommand{\ml}[1][usedefault, addprefix=\global, 1=\theta]{\hat{#1}_{ML}}%
+%\newcommandx\map[1][usedefault, addprefix=\global, 1=\theta]{\hat{#1}_{MAP}}%
+
+\newcommand{\diag}[1]{\text{diag}\left(#1\right)}%
+\newcommand{\tr}{\text{tr}}%
+%\newcommand{\det}{\text{det}}%
+\newcommand{\Kroneckerproduct}{\otimes}%
+\newcommand{\Hadamardproduct}{\odot}%
+\newcommand{\eye}{\mathbf{I}}%
+
+\newcommand{\Real}[1]{\text{Re}\left(#1\right)}%
+\newcommand{\Imag}[1]{\text{Im}\left(#1\right)}%
+
+\newcommand{\DFT}[1]{\mathcal{DFT}\left\{#1\right\}}%
+\newcommand{\IDFT}[1]{\mathcal{DFT}^{-1}\left\{#1\right\}}%
+\newcommand{\fft}[1]{\mathcal{FFT}\left\{#1\right\}}%
+\newcommand{\ifft}[1]{\mathcal{FFT}^{-1}\left\{#1\right\}}%
+\newcommand{\ifourier}[1]{\mathcal{F}^{-1}\left\{#1\right\}}%
+\newcommand{\fourier}[1]{\mathcal{F}\left\{#1\right\}}%
+
+% \newcommand{\lim}[1]{\underset{#1}{\text{lim}}}%
+
+\newcommand{\phiphi}[1]{\frac{\partial}{\partial#1}}%
+
+
+\newcommand{\TV}[1]{{\color{blue} #1}}		% Tuvy's comments
+\newcommand{\IDO}[1]{{\color{purple} #1}}	% Vadim's comments 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%					Specific for this work 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\xx}{X}%
+
+\global\long\def\nn{\mathcal{N}}%
+
+\newcommand{\cc}{\mathcal{C}}% semantic state space
+\newcommand{\ccsize}{|\cc|}% semantic state space size
+
+\newcommand{\Aspace}{\mathcal{A}}% action space
+\newcommand{\Bspace}{\mathcal{B}}% belief space
+\newcommand{\Sspace}{\mathcal{S}}% state space
+\newcommand{\Xspace}{\mathcal{X}}% continues 
+\newcommand{\Zspace}{\mathcal{Z}}% observation space
+\newcommand{\Cspace}{\mathcal{Z}}% semantic state space
+
+
+\newcommand{\betaalphabet}{\beta_{\alpha,\beta}^k}
+
+\newcommand{\setout}[1][k]{\Omega^{out}_{#1}}
+\newcommand{\setin}[1][k]{\Omega^{in}_{#1}}
+
+\newcommand{\xdomain}[1][k]{\Omega_{\xx_{#1}}}
+
+\newcommand{\btildin}[1][k]{\tilde{b}_{#1}^{in}}
+\newcommand{\btildout}[1][k]{\tilde{b}_{#1}^{out}}
+\newcommand{\Nin}{N_{in}}
+\newcommand{\sortedpsi}[1][k]{\tilde{\psi}_{#1}}
+
+\newcommand{\prob}[1]{\ensuremath{\mathbb{P}({#1})}}
+\newcommand{\no}{N}
+\newcommand{\etab}{\underline{\eta}}
+\newcommand{\beliefb}{\underline{b}}
+\newcommand{\ee}[1]{\underset{#1}{\mathbb{E}}}
+\newcommand{\belieftk}[1][\xx_t]{\pr \left( #1 \mid H_k, a_{k:t-1} \right)}
+
+\newcommand{\xsafe}{\mathcal{X}_{\text{safe}}}
+\newcommand{\xunsafe}{\mathcal{X}_{\text{unsafe}}}
+\newcommand{\psafe}{\pr_{\text{safe}}}
+\newcommand{\punsafe}{\pr_{\text{unsafe}}}
+
+% approach
+\newcommand{\gdot}{g\left(\cdot\right)}
+\newcommand{\belief}[2][k]{b_{#1}\left[#2\right]}
+\newcommand{\belieftild}[2][k]{\tilde{b}_{#1}\left[#2\right]}
+\newcommand{\geobelief}[2][k]{b^g_{#1}\left[#2\right]}
+
+\newcommand{\Thetasize}{N^{\Theta}}
+\newcommand{\SetOfSets}{I_{\mathcal{P}}}
+
+%POMDP
+\newcommand{\PT}{\mathcal{T}}  % transition model
+\newcommand{\PZ}{\mathcal{O}}  % observation model
+\newcommand{\Ivis}{\oneb^{vis}}
+\newcommand{\Itime}{I^{time}}
+\newcommand{\Iobj}{I^{obj}}
+
+\newcommand{\rectangle}{{%
+\ooalign{$\sqsubset\mkern3mu$\cr$\mkern3mu\sqsupset$\cr}%
+}}
+
+\newcommand{\ebfull}{\texttt{exact-all-hyp} }
+\newcommand{\Ebfull}{\texttt{Exact-all-hyp} }
+\newcommand{\ebpruned}{\texttt{exact-pruned} }
+\newcommand{\Ebpruned}{\texttt{Exact-pruned} }
+\newcommand{\PFfull}{\texttt{PF-all-hyp} }
+\newcommand{\PFpruned}{\texttt{PF-pruned} }
+\newcommand{\MCMC}{\texttt{MCMC-Ours} }
+\newcommand{\SNIS}{\texttt{SNIS-Ours} }
+\newcommand{\GSMAP}{\texttt{GS-MAP} }
+\newcommand{\ac}{a}
+\newcommand{\vec}{\text{vec}}

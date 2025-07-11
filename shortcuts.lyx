@@ -1,0 +1,1414 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options false
+\maintain_unincluded_children false
+\language english
+\language_package none
+\inputencoding utf8
+\fontencoding default
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref true
+\pdf_bookmarks false
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks false
+\pdf_backref section
+\pdf_pdfusetitle false
+\papersize default
+\use_geometry false
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 1
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 0
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date true
+\justification true
+\use_refstyle 0
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{theorem}{
+\end_layout
+
+\end_inset
+
+Theorem
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}[section]
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{assumption}[theorem]{
+\end_layout
+
+\end_inset
+
+Assumption
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{lemma}[theorem]{
+\end_layout
+
+\end_inset
+
+Lemma
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{claim}[theorem]{
+\end_layout
+
+\end_inset
+
+Claim
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{problem}[theorem]{
+\end_layout
+
+\end_inset
+
+Problem
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+%
+\backslash
+newtheorem{algorithm}[theorem]{Algorithm}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{proposition}[theorem]{
+\end_layout
+
+\end_inset
+
+Proposition
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{corollary}[theorem]{
+\end_layout
+
+\end_inset
+
+Corollary
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{construction}[theorem]{
+\end_layout
+
+\end_inset
+
+Construction
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{definition}[theorem]{
+\end_layout
+
+\end_inset
+
+Definition
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{example}[theorem]{
+\end_layout
+
+\end_inset
+
+Example
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{xca}[theorem]{
+\end_layout
+
+\end_inset
+
+Exercise
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{comments}[theorem]{
+\end_layout
+
+\end_inset
+
+Comments
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{remark}[theorem]{
+\end_layout
+
+\end_inset
+
+Remark
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{thm}{
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+protect
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+theoremname
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+%
+\backslash
+theoremstyle{plain}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+newtheorem{lem}[thm]{
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+protect
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+
+\backslash
+lemmaname
+\end_layout
+
+\end_inset
+
+
+\begin_inset ERT
+status collapsed
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\zerob}{\mathbf{0}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\oneb}{\mathbf{1}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\snr}{\text{SNR}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\norma}[1]{\left\Vert #1\right\Vert }
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Ab}{\mathbf{A}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\ab}{\mathbf{a}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Bb}{\mathbf{B}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\bb}{\mathbf{b}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Cb}{\mathbf{C}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\cb}{\mathbf{c}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Db}{\mathbf{D}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\db}{\mathbf{d}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Eb}{\mathbf{E}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\eb}{\mathbf{e}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Fb}{\mathbf{F}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\fb}{\mathbf{f}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Gb}{\mathbf{G}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\gb}{\mathbf{g}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Hb}{\mathbf{H}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\hb}{\mathbf{h}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Ib}{\mathbf{I}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\ib}{\mathbf{i}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Jb}{\mathbf{J}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\jb}{\mathbf{j}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Kb}{\mathbf{K}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\kb}{\mathbf{k}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Lb}{\mathbf{L}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\lb}{\mathbf{l}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Mb}{\mathbf{M}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\mb}{\mathbf{m}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Nb}{\mathbf{N}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\nb}{\mathbf{n}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Ob}{\mathbf{O}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\ob}{\mathbf{o}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Pb}{\mathbf{P}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\pb}{\mathbf{p}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Qb}{\mathbf{Q}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\qb}{\mathbf{q}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Rb}{\mathbf{R}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\rb}{\mathbf{r}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Sb}{\mathbf{S}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\sb}{\mathbf{s}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Tb}{\mathbf{T}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\tb}{\mathbf{t}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Ub}{\mathbf{U}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\ub}{\mathbf{u}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Vb}{\mathbf{V}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\vb}{\mathbf{v}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Wb}{\mathbf{W}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\wb}{\mathbf{w}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Xb}{\mathbf{X}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\xb}{\mathbf{x}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Yb}{\mathbf{Y}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\yb}{\mathbf{y}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Zb}{\mathbf{Z}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\zb}{\mathbf{z}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\RF}{\mathbb{R}}
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\CF}{\mathbb{C}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\IF}{\mathbb{I}}
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\NF}{\mathbb{N}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\ZF}{\mathbb{Z}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\define}{\triangleq}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\const}{\text{const}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\argThis}[3]{ \underset{#2}{#1} \left\lbrace #3 \right\rbrace }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\argmax}[2]{\argThis{\text{argmax}}{#1}{#2}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\argmin}[2]{\argThis{\text{argmin}}{#1}{#2}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\defineInline}[2]{\underset{#2}{\underbrace{#1}}}
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\=}[1]{\underset{#1}{=}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\intX}{\intop_{\Omega}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\inttheta}{\intop_{\Theta}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\intone}{\intop_{-1}^{1}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\intinf}{\intop_{-\infty}^{\infty}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\tetahat}{\hat{\boldsymbol{\theta}}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\cnormaldistribution}[2]{\mathcal{N}^{c}\left(#1,#2\right)}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\normaldistribution}[2]{\mathcal{N}\left(#1,#2\right)}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\tt}{\boldsymbol{\theta}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\var}{\text{Var}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\E}{\mathbb{E}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\pp}{\mathbb{E}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Ehat}[1]{\hat{\text{\ensuremath{\E}}}\left[#1\right]}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\cov}{\text{Cov}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\pdf}[1]{f\left(#1\right)}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\mse}{\text{MSE}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\varnoise}{\sigma^{2}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\varalpha}{\sigma_{a}^{2}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\pr}{\mathbb{P}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\independent}{\perp\!\!\! \perp}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\thetaml}{\hat{\theta}_{ML}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\diag}[1]{\text{diag}\left(#1\right)}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\tr}{\text{tr}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Kroneckerproduct}{\otimes}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Hadamardproduct}{\odot}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\eye}{\mathbf{I}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Real}[1]{\text{Re}\left(#1\right)}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Imag}[1]{\text{Im}\left(#1\right)}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\DFT}[1]{\mathcal{DFT}\left\{  #1\right\}  }
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\IDFT}[1]{\mathcal{DFT}^{-1}\left\{  #1\right\}  }
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\fft}[1]{\mathcal{FFT}\left\{  #1\right\}  }
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\ifft}[1]{\mathcal{FFT}^{-1}\left\{  #1\right\}  }
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\ifourier}[1]{\mathcal{F}^{-1}\left\{  #1\right\}  }
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\fourier}[1]{\mathcal{F}\left\{  #1\right\}  }
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\phiphi}[1]{\frac{\partial}{\partial#1}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\TV}[1]{{\color{blue} #1}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\VI}[1]{{\color{purple} #1}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\RM}[1]{{\color{teal} #1}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\CHNG}[1]{{\color{maroon} #1}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\xx}{X}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\nn}{\mathcal{N}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\cc}{\mathcal{C}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\ccsize}{|\cc|}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\Aspace}{\mathcal{A}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Bspace}{\mathcal{B}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Sspace}{\mathcal{S}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Xspace}{\mathcal{X}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Zspace}{\mathcal{Z}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\betaalphabet}{\beta_{\alpha,\beta}^{k}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\setout}[1][k]{\Omega_{#1}^{out}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\setin}[1][k]{\Omega_{#1}^{in}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\xdomain}[1][k]{\Omega_{\xx_{#1}}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\btildin}[1][k]{\tilde{b}_{#1}^{in}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\btildout}[1][k]{\tilde{b}_{#1}^{out}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\Nin}{N_{in}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\sortedpsi}[1][k]{\tilde{\psi}_{#1}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\prob}[1]{\ensuremath{\mathbb{P}({#1})}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\no}{N}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\etab}{\underline{\eta}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\beliefb}{\underline{b}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\ee}[1]{\underset{#1}{\mathbb{E}}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\belieftk}[1][\xx_{t}]{\pr\left( #1 \mid H_{k}, a_{k:t-1} \right)}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\xsafe}{\mathcal{X}_{\text{safe}}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\xunsafe}{\mathcal{X}_{\text{unsafe}}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\psafe}{\pr_{\text{safe}}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\punsafe}{\pr_{\text{unsafe}}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\gdot}{g\left(\cdot\right)}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\belief}[2][k]{b_{#1}\left[#2\right]}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\belieftild}[2][k]{\tilde{b}_{#1}\left[#2\right]}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\geobelief}[2][k]{b_{#1}^{g}\left[#2\right]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\Thetasize}{N^{\Theta}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\SetOfSets}{I_{\mathcal{P}}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\PT}{\pr_{T}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\PZ}{\pr_{Z}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Ivis}{\oneb^{vis}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\Itime}{I^{time}}
+\end_inset
+
+
+\begin_inset FormulaMacro
+\newcommand{\Iobj}{I^{obj}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\rectangle}{{%
+\ooalign{$\sqsubset\mkern3mu $\cr$\mkern3mu \sqsupset$\cr}%
+}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\ebfull}{\texttt{exact-all-hyp} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\Ebfull}{\texttt{Exact-all-hyp} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\ebpruned}{\texttt{exact-pruned} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\Ebpruned}{\texttt{Exact-pruned} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\PFfull}{\texttt{PF-all-hyp} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\PFpruned}{\texttt{PF-pruned} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\MCMC}{\texttt{MCMC-Ours} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\SNIS}{\texttt{SNIS-Ours} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\GSMAP}{\texttt{GS-MAP} }
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\ac}{a}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\GG}{\mathcal{G}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\HH}{\mathcal{H}}
+\end_inset
+
+ 
+\begin_inset FormulaMacro
+\newcommand{\Image}{\text{Image}}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\setoneton}[1][n]{\left\{  1,2,\ldots,#1\right\}  }
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

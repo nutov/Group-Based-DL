@@ -1,0 +1,319 @@
+
+\documentclass[english]{article}
+\usepackage[latin9]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xargs}[2008/03/08]
+\usepackage{babel}
+\usepackage{tikz}
+\begin{document}
+\input{shortcuts.tex}
+\title{Homework 4}
+\author{Ido Nutov \& Tuvy Lemberg}
+\maketitle
+
+\section{Question 1}
+
+
+
+Let $G\leq S_{n}$ be a subgroup of the permutation group $S_{n}$
+acting on the index set $X=\ensuremath{\{1,2,\ldots,n\}}$
+where $n$ is a finite natural number. An element $g$ acts on a vector
+$v\in\RF^{n}$ on the coordinate $i$ by $\left(gv\right)_{i}=v_{g^{-1}(i)}$.
+Consider a $G$-linear transformation $T:\RF^{n}\rightarrow\RF^{n}$.
+Thus, $T(gv)=gT(v)$. Therefore, $T$ must fulfill $Tgv=gTv$ for all
+$g\in G$ and $v\in\RF^{n}$. As a result $Tg=gT$ and equivalently,
+$g^{-1}Tg=T$ for all $g\in G$ (in the lectures we used $W$). Applying
+$g$ from the right on the columns of $T$ and $g^{-1}$ from the
+left on the rows of $T$ results in the following condition: 
+\begin{equation}
+T_{i,j}=T_{g^{-1}(i),g^{-1}(j)}.\label{eq:q1_condition}
+\end{equation}
+$g$ acts on $T$ and on each orbit of $T$ the requirement is
+that $T$ is constant. Thus, the condition requires that $T_{i,j}=T_{l,m}$
+if $Orb_{G}\left((i,j)\right)=Orb_{G}\left((l,m)\right)$. Therefore
+the number of free parameters is the number of orbits. 
+
+We define $U=X\times X$. Burnside\textquoteright s Lemma states that
+\[
+\left|U\slash G\right|=\frac{1}{\left|G\right|}\sum_{g\in G}\left|U^{g}\right|=\frac{1}{\left|G\right|}\sum_{g\in G}\left|X^{g}\right|^{2}
+\]
+ where $\left|U\slash G\right|$ is the number of orbits and $U^{g}=\left\{ u\in U\mid gu=u\right\} $
+is the set of elements in $U$ that $g$ doesn't change. We have the
+property of $\left|U^{g}\right|=\chi_{\sigma}(g)$,
+
+\section{Question 2}
+
+\subsection{~}
+
+The natural group here is the cross product of the permutation groups
+$S_{n}\times S_{m}$ acts on the Netflix rating matrices $A\in\RF^{n\times m}$.
+It can be explained by the fact that the order of the $m$ movies
+and the order of the $n$ users is arbitrary and both can be changed
+independently.
+
+\subsection{~}
+
+\label{subsec:q21}
+
+
+Since we look at the $G$-linear transformation from matrices in $\RF^{n\times m}$
+to itself, it will be more convenient to consider the vectorization
+of these matrices. Thus $\vec(A)=\left[a_{1,1},\ldots,a_{n,1},\ldots,a_{1,m},\ldots,a_{n,m}\right]^{T}\in\RF^{nm}$.
+Let $g=\left(g_{l},g_{r}\right)\in S_{n}\times S_{m}$ be a group
+element where $g_{l}\in S_{n}$ is a left action that acts on the
+rows of $A$ and $g_{r}\in S_{m}$ acts on the columns of $A$ as
+follows: 
+\[
+gA=g_{l}Ag_{r}^{T}=P_{l}AP_{r}^{T}
+\]
+where $P_{l}\in\RF^{n\times n}$ and $P_{r}\in\RF^{m\times m}$ are
+the permutations of $g_{l}$ and $g_{r}$, respectively. Define $v=\vec(A)\in\RF^{nm}$.
+In index notation we have $\left(gA\right)_{i,j}=A_{g_{l}^{-1}(i),g_{r}^{-1}(j)}$.
+We are looking at the affine transformation that is equivariant, thus
+$f(v)=Wv+b$, that fulfills for all $g\in S_{n}\times S_{m}$ and
+$v\in\RF^{nm}$
+\begin{align}
+f(gv) & =W\left(gv\right)+b=g\left(Wv+b\right)\nonumber \\
+ & \Rightarrow Wgv+b=gWv+gb\label{eq:condition_affine}
+\end{align}
+Since (\ref{eq:condition_affine}) needs to be fulfilled for all $v\in\RF^{nm}$
+it leads to $Wg=gW$ and equivalently $gWg^{T}=W$. Moreover, it requires
+that $gb=b$ for all $g\in S_{n}\times S_{m}$. The group $S_{n}\times S_{m}$
+is isomorphic to a subgroup $G\in S_{nm}$ and now let us look at the
+homomorphism between the two groups, where $S_{n}\times S_{m}$ acts
+as described above and $S_{nm}$ acts on vectors in $\RF^{nm}$. We
+have 
+\[
+gA=g_{l}Ag_{r}^{T}=P_{l}AP_{r}^{T}.
+\]
+By vectorizing the above we obtain 
+\[
+\text{vec}\left(P_{l}AP_{r}^{T}\right)=\left(P_{r}\otimes P_{l}\right)\vec(A)=\left(P_{r}\otimes P_{l}\right)v
+\]
+For $b$, we can see from (\ref{eq:condition_affine}) that this means
+that $b$ is constant, $b=\left[\begin{array}{ccc}
+1 & \cdots & 1\end{array}\right]c$. This can be seen by applying the inverse vectorization operation on $b$
+and seeing that the condition (\ref{eq:condition_affine}) requires that
+all values of $b$ will be the same since $S_{n}\times S_{m}$ is
+two times transitive on $\RF^{n\times m}$.
+
+For $W$ we have $Wg=gW\Rightarrow gWg^{-1}=W$. Thus, for the permutation
+$P_{g}$ representing $g\in S_{nm}$ which fulfills $P=P_{r}\otimes P_{l}$,
+we have $W_{i,j}=W_{g^{-1}(i),g^{-1}(j)}$, therefore we look at
+the orbits of $W$ induced by $G$. 
+
+Let us look at the action of the permutation $g^{-1}=(g_{l}^{-1},g_{r}^{-1})$
+on the vector $v$. We take the inverse for convenience of notation.
+Originally, the element with the index $A_{i,j}$ moves to $v_{i+n\cdot j}$,
+therefore 
+\[
+\left(g^{-1}A\right)_{i,j}=A_{g_{l}(i),g_{r}(j)}=v_{g_{l}(i)+n\left(g_{r}(j)-1\right)}.
+\]
+Consequently, for an index $1\leq k\leq nm$, define $j=k//n$ as the
+truncating integer division and $i=k\%n$ as the modulo operation, thus $\left(g^{-1}v\right)_{k}=v_{g_{l}(i)+n\cdot\left(g_{r}(j)-1\right)}$.
+Let $k,l$ be indices in $\left[1,\ldots,nm\right]$ with the decompositions
+$k=i_{1}+nj_{1}$ and $l=i_{2}+nj_{2}$. Then $\left(g^{-1}Wg\right)_{k,l}=W_{g_{l}(i_{1})+n\cdot\left(g_{r}(j_{1})-1\right),g_{l}(i_{2})+n\left(g_{r}(j_{2})-1\right)}$. 
+
+\subsubsection{Orbit analysis}
+
+Let us look at the possible orbits in the index space $X^{2}=\left\{ 1,2,\ldots,nm\right\} ^{2}$.
+Indices $\left(k',l'\right)$ can be on the same orbits as $\left(k,l\right)$
+if and only if there exists a permutation $\left(g_{l},g_{r}\right)\in S_{n}\times S_{m}$
+such that 
+\[
+\begin{cases}
+k' & =g_{l}(i_{1})+n\left(g_{r}(j_{1})-1\right)\\
+l' & =g_{l}(i_{2})+n\left(g_{r}(j_{2})-1\right)
+\end{cases}.
+\]
+Define $i_{3},i_{4},j_{3},j_{4}$ such that $k'=i_{3}+n(j_{3}-1)$
+and $l'=i_{4}+n(j_{4}-1)$. It is clear that we can create equivalence
+groups by the rule: 
+\[
+\left(i_{1}{}_{=}^{\neq}i_{2}\right)\wedge\left(j_{1}{}_{=}^{\neq}j_{2}\right)
+\]
+. It is clear that $i_{3}=i_{4}$ holds if and only if $i_{1}=i_{2}$,
+since by applying $g_{l}$ we have $g_{l}(i_{1})=g_{l}(i_{2})=i_{3}=i_{4}$,
+and since $g_{l}$ is a bijection. The same goes for $j_{1}=j_{2}$. 
+
+These are the orbits and the explanation for why they are the only orbits
+is as follows: if $i_{1}=i_{2}$ then we can move to any other $k',l'$
+that has $i_{3}=i_{4}$ by applying the right $g_{l}(i_{1})=i_{3}$.
+If $i_{1}\neq i_{2}$ we can move to any other indices $i_{3}\neq i_{4}$
+since $S_{n}$ is 2-transitive. The same goes for the indices $j$. Therefore
+we will have only these 4 orbits:
+\begin{align*}
+O_{=i=j} & :i_{1}=i_{2},j_{1}=j_{2}\\
+O_{=i\neq j} & :i_{1}=i_{2},j_{1}\neq j_{2}\\
+O_{\neq i=j} & :i_{1}\neq i_{2},j_{1}=j_{2}\\
+O_{\neq i\neq j} & :i_{1}\neq i_{2},j_{1}\neq j_{2}
+\end{align*}
+
+
+\subsection{~}
+
+For $n=m=3$ we will obtain $W\in\RF^{9\times9}$ and $b\in\RF^{9}$
+
+\begin{center}
+\begin{tikzpicture}[scale=0.5]
+    \def\nm{9}
+    \def\n{3} % Number of rows
+    \def\m{3} % Number of columns
+    % Draw the grid and fill colors
+    \foreach \ik in {1,...,\n} {
+        \foreach \jk in {1,...,\m} {
+            \foreach \il in {1,...,\n} {
+                \foreach \jl in {1,...,\m} {
+                    % Compute the indices
+                    \pgfmathsetmacro{\k}{int(\ik + (\jk-1)*\n)}
+                    \pgfmathsetmacro{\l}{int(\il + (\jl-1)*\n)}
+                    % Color according to orbit type
+                    \ifnum\ik=\il
+                        \ifnum\jk=\jl
+                            \fill[blue!70!black!60] (\l,-\k) rectangle ++(1,1);
+                        \else
+                            \fill[magenta!80!black!40] (\l,-\k) rectangle ++(1,1);
+                        \fi
+                    \else
+                        \ifnum\jk=\jl
+                            \fill[orange!90!black!50] (\l,-\k) rectangle ++(1,1);
+                        \else
+                            \fill[teal!80!black!50] (\l,-\k) rectangle ++(1,1); 
+                        \fi
+                    \fi
+                    \draw[black, line width=0.3pt] (\l,-\k) rectangle ++(1,1);
+                }
+            }
+        }
+    }
+    % Row and column labels
+    \foreach \i in {1,...,\nm} {
+        \node[left, font=\footnotesize] at (0.9,{-\i+0.5}) {\i};
+        \node[below, font=\footnotesize] at (\i+0.5,-0.1 -\nm) {\i};
+    }
+\end{tikzpicture}
+\end{center}
+
+
+\subsection{~}
+
+In the case of a linear invariant layer, for all $v\in\RF^{nm}$ and
+$g\in G$ we have:
+\begin{align*}
+f(gv) & =f(v)\\
+\Rightarrow w^{T}gv+b & =w^{T}v+b\\
+\Rightarrow g^{T}w & =w
+\end{align*}
+This is true for all biases $b\in\RF$. Consider index $k=i+n(j-1)$.
+For $w$ we have $\left(g^{T}w\right)_{k}=w_{g(k)}=w_{g_{l}(i)+n(g_{r}(j)-1)}$.
+In this case the orbit is the entire vector $w$ which means that
+$w=\lambda\mathbf{1}$. 
+
+\subsection{~}
+
+In the case of 3-tensors with the symmetric group $S_{N_{1}}\times S_{N_{2}}\times S_{N_{3}}$
+applied independently to each index axis of the tensor, we have: 
+\[
+v=\vec(A)
+\]
+ and 
+\[
+v_{m}=a_{i_{1},i_{2},i_{3}}
+\]
+where $m=i_{1}+N_{1}(i_{2}-1)+N_{1}N_{2}(i_{3}-1)$. Define $k=i_{1}^{k}+N_{1}(i_{2}^{k}-1)+N_{1}N_{2}(i_{3}^{k}-1)$
+and $l=i_{1}^{l}+N_{1}(i_{2}^{l}-1)+N_{1}N_{2}(i_{3}^{l}-1)$. We will
+have the same derivation as in the previous clause \ref{subsec:q21},
+thus 
+\begin{align*}
+W_{k,l} & =W_{g(k),g(l)}
+\end{align*}
+The indices $\left(k,l\right)$ can transform to 
+\begin{align*}
+k' & =g_{1}(i_{1}^{k})+N_{1}(g_{2}(i_{2}^{k})-1)+N_{1}N_{2}(g_{3}(i_{3}^{k})-1)\\
+l' & =g_{1}(i_{1}^{l})+N_{1}(g_{2}(i_{2}^{l})-1)+N_{1}N_{2}(g_{3}(i_{3}^{l})-1)
+\end{align*}
+where the equivalence relations follow the same pattern as before,
+thus the orbits are 
+
+\[
+\wedge_{n=1}^{3}i_{n}^{k}{}_{=}^{\neq}i_{n}^{l}.
+\]
+In each coordinate in the original matrix $A$, the permutation is 2-transitive,
+therefore we can move to any other configuration. As a result, the orbits are:
+\begin{align*}
+O_{=i_{1}=i_{2}=i_{3}} & :i_{1}^{k}=i_{1}^{l},i_{2}^{k}=i_{2}^{l},i_{3}^{k}=i_{3}^{l}\\
+O_{=i_{1}=i_{2}\neq i_{3}} & :i_{1}^{k}=i_{1}^{l},i_{2}^{k}=i_{2}^{l},i_{3}^{k}\neq i_{3}^{l}\\
+O_{=i_{1}\neq i_{2}=i_{3}} & :i_{1}^{k}=i_{1}^{l},i_{2}^{k}\neq i_{2}^{l},i_{3}^{k}=i_{3}^{l}\\
+\vdots\\
+O_{=i_{1}=i_{2}=i_{3}} & :i_{1}^{k}\neq i_{1}^{l},i_{2}^{k}\neq i_{2}^{l},i_{3}^{k}\neq i_{3}^{l}
+\end{align*}
+
+For $N_{1}=N_{2}=N_{3}=3$ we will have $W\in\RF^{27\times27}$
+and $b\in\RF^{27} = \lambda\mathbf{1}$. $W$ can be visualized as follows:
+%
+%
+\begin{center}
+\begin{tikzpicture}[scale=0.5]
+    \def\N{3} % Number of rows
+    \def\M{3} % Number of columns
+    \def\Q{3}
+    \foreach \ik in {1,...,\N} {
+        \foreach \jk in {1,...,\M} {
+            \foreach \qk in {1,...,\Q} {
+                \foreach \il in {1,...,\N} {
+                    \foreach \jl in {1,...,\M} {
+                        \foreach \ql in {1,...,\Q} {
+                            % Compute the indices
+                            \pgfmathsetmacro{\k}{int(\ik + (\jk-1)*\N + (\qk-1)*\N*\M)}
+                            \pgfmathsetmacro{\l}{int(\il + (\jl-1)*\N + (\ql-1)*\N*\M)}
+                            % Color according to orbit type
+                            \ifnum\ik=\il
+                                \ifnum\jk=\jl
+                                    \ifnum\qk=\ql
+                                        \fill[blue!70!black!60] (\l,-\k) rectangle ++(1,1);
+                                    \else
+                                        \fill[magenta!80!black!40] (\l,-\k) rectangle ++(1,1);
+                                    \fi
+                                \else
+                                    \ifnum\jk=\jl
+                                        \ifnum\qk=\ql
+                                            \fill[orange!90!black!50] (\l,-\k) rectangle ++(1,1);
+                                        \else
+                                            \fill[brown!80!black!50] (\l,-\k) rectangle ++(1,1);
+                                        \fi
+                                    \else
+                                        \fill[red!50!blue] (\l,-\k) rectangle ++(1,1);
+                                    \fi
+                                \fi
+                            \else
+                                \ifnum\jk=\jl
+                                    \ifnum\qk=\ql
+                                        \fill[orange!90!black!50] (\l,-\k) rectangle ++(1,1);
+                                    \else
+                                        \fill[darkgray] (\l,-\k) rectangle ++(1,1);
+                                    \fi
+                                \else
+                                    \ifnum\qk=\ql
+                                        \fill[olive!80!black!50] (\l,-\k) rectangle ++(1,1);
+                                    \else
+                                        \fill[teal!80!black!50] (\l,-\k) rectangle ++(1,1);
+                                    \fi
+                                \fi
+                            \fi
+                            % Draw the rectangle border
+                            \draw[black, line width=0.3pt] (\l,-\k) rectangle ++(1,1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+\end{tikzpicture}
+\end{center}
+    
+
+\section{~ }
+
+\section{~}
+\end{document}
