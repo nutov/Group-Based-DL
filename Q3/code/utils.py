@@ -90,3 +90,44 @@ def run_test(test_args:tuple,num_tests = 100):
         if not test_func(net):
             res+=1
     return res/num_tests
+
+
+def compute_variance_target(x):
+    return x.var(dim=0, unbiased=False)
+
+def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=6):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    x.to(device)
+    model.to(device)
+    for epoch in range(epochs):
+        total_loss = 0.0
+        for _ in range(augments_per_epoch):
+            perm = torch.randperm(x.size(0))
+            x_aug = x[perm]                          # permute rows
+            y_true = compute_variance_target(x_aug).to(device)  # shape: (d,)
+            y_pred = model(x_aug).to(device)
+            loss = F.mse_loss(y_pred, y_true)
+            loss.backward()
+            total_loss += loss.item()
+        optimizer.step()
+        optimizer.zero_grad()
+        if epoch % 10 == 0:
+            print(f"[Epoch {epoch}] Loss: {total_loss / augments_per_epoch:.6f}")
+    return model
+
+
+
+
+
+def test_variance_invariance(model,d=50, tol=1e-2, num_tests=100):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    x = torch.randn((100,d)).to(device)
+    model.eval()
+    with torch.no_grad():
+        y_ref = model(x)
+        for _ in range(num_tests):
+            perm = torch.randperm(x.size(0))
+            y_alt = model(x[perm])
+            if not torch.allclose(y_ref, y_alt, atol=tol):
+                return False
+    return True

@@ -96,3 +96,19 @@ class Linear_eq_Net(nn.Module):
         x_eq = self.equiv(x)
         x_pool = x_eq.sum(dim=0)
         return self.post_pool(x_pool)
+
+
+class AugmentedInvariantNet(nn.Module):
+    def __init__(self, d=10, d_hidden=32):
+        super().__init__()
+        self.net = nn.Sequential(
+            #nn.Flatten(),  # input shape (n, d) → (n*d,)
+            nn.Linear(d , d_hidden),  # assuming n = 10
+            nn.ReLU(),
+            nn.Linear(d_hidden, 1)
+        )
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+    def forward(self, x):
+        #x = x.to(self.device)
+        #self.net.to(self.device)
+        return self.net(x)
