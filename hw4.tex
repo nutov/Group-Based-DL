@@ -1,4 +1,3 @@
-
 \documentclass[english]{article}
 \usepackage[latin9]{inputenc}
 \usepackage{amsmath}
@@ -12,11 +11,11 @@
 \author{Ido Nutov \& Tuvy Lemberg}
 \maketitle
 
-\section{Question 1}
+\section{~}
 
 
 
-Let $G\leq S_{n}$ be a subgroup of the permutation group $S_{n}$
+Let $G\leq S_n$ be a subgroup of the permutation group $S_n$
 acting on the index set $X=\ensuremath{\{1,2,\ldots,n\}}$
 where $n$ is a finite natural number. An element $g$ acts on a vector
 $v\in\RF^{n}$ on the coordinate $i$ by $\left(gv\right)_{i}=v_{g^{-1}(i)}$.
@@ -35,9 +34,17 @@ if $Orb_{G}\left((i,j)\right)=Orb_{G}\left((l,m)\right)$. Therefore
 the number of free parameters is the number of orbits. 
 
 We define $U=X\times X$. Burnside\textquoteright s Lemma states that
-\[
-\left|U\slash G\right|=\frac{1}{\left|G\right|}\sum_{g\in G}\left|U^{g}\right|=\frac{1}{\left|G\right|}\sum_{g\in G}\left|X^{g}\right|^{2}
-\]
+\begin{equation}
+\left|U\slash G\right|
+=
+\frac{1}{\left|G\right|}\sum_{g\in G}\left|U^{g}\right|
+=
+\frac{1}{\left|G\right|}\sum_{g\in G}\left|X^{g}\right|^{2}
+=
+\frac{1}{\left|G\right|}\sum_{g\in G}\chi_{\rho}(g)^{2}
+,
+\label{eq:burnside}
+\end{equation}
  where $\left|U\slash G\right|$ is the number of orbits and $U^{g}=\left\{ u\in U\mid gu=u\right\} $
 is the set of elements in $U$ that $g$ doesn't change. We have the
 property of $\left|U^{g}\right|=\chi_{\sigma}(g)$,
@@ -47,7 +54,7 @@ property of $\left|U^{g}\right|=\chi_{\sigma}(g)$,
 \subsection{~}
 
 The natural group here is the cross product of the permutation groups
-$S_{n}\times S_{m}$ acts on the Netflix rating matrices $A\in\RF^{n\times m}$.
+$S_n\times S_{m}$ acts on the Netflix rating matrices $A\in\RF^{n\times m}$.
 It can be explained by the fact that the order of the $m$ movies
 and the order of the $n$ users is arbitrary and both can be changed
 independently.
@@ -59,101 +66,118 @@ independently.
 
 Since we look at the $G$-linear transformation from matrices in $\RF^{n\times m}$
 to itself, it will be more convenient to consider the vectorization
-of these matrices. Thus $\vec(A)=\left[a_{1,1},\ldots,a_{n,1},\ldots,a_{1,m},\ldots,a_{n,m}\right]^{T}\in\RF^{nm}$.
-Let $g=\left(g_{l},g_{r}\right)\in S_{n}\times S_{m}$ be a group
-element where $g_{l}\in S_{n}$ is a left action that acts on the
-rows of $A$ and $g_{r}\in S_{m}$ acts on the columns of $A$ as
+of these matrices. Thus $\vec(A)=\left[a_{1,1},\ldots,a_{n,1},\ldots,a_{1,m},\ldots,a_{n,m}\right]^T\in\RF^{nm}$.
+Let $g=\left(g_l,g_r\right)\in S_n\times S_{m}$ be a group
+element where $g_l\in S_n$ is a left action that acts on the
+rows of $A$ and $g_r\in S_{m}$ acts on the columns of $A$ as
 follows: 
-\[
-gA=g_{l}Ag_{r}^{T}=P_{l}AP_{r}^{T}
-\]
-where $P_{l}\in\RF^{n\times n}$ and $P_{r}\in\RF^{m\times m}$ are
-the permutations of $g_{l}$ and $g_{r}$, respectively. Define $v=\vec(A)\in\RF^{nm}$.
-In index notation we have $\left(gA\right)_{i,j}=A_{g_{l}^{-1}(i),g_{r}^{-1}(j)}$.
+\begin{equation}
+gA=g_lAg_r^T
+=
+P_lAP_r^T
+,
+\label{eq:groupAction}
+\end{equation}
+where $P_l\in\RF^{n\times n}$ and $P_r\in\RF^{m\times m}$ are
+the permutations of $g_l$ and $g_r$, respectively. Define $v=\vec(A)\in\RF^{nm}$. 
+We are actually looking on the isomorphic group $G \leq S_{nm}$, which acts on the indexes of the vectorization of $A$. We will use $G$ and $S_n \times S_m$ interchangeably.
+In index notation we have $\left(gA\right)_{i,j}=A_{g_l^{-1}(i),g_r^{-1}(j)}$.
 We are looking at the affine transformation that is equivariant, thus
-$f(v)=Wv+b$, that fulfills for all $g\in S_{n}\times S_{m}$ and
+$f(v)=Wv+b$, that fulfills for all $g\in S_n\times S_{m}$ and
 $v\in\RF^{nm}$
 \begin{align}
-f(gv) & =W\left(gv\right)+b=g\left(Wv+b\right)\nonumber \\
- & \Rightarrow Wgv+b=gWv+gb\label{eq:condition_affine}
+f(gv) 
+&=
+W\left(gv\right)+b=g\left(Wv+b\right)\nonumber \\
+&
+\Rightarrow Wgv+b=gWv+gb\label{eq:condition_affine}
 \end{align}
 Since (\ref{eq:condition_affine}) needs to be fulfilled for all $v\in\RF^{nm}$
-it leads to $Wg=gW$ and equivalently $gWg^{T}=W$. Moreover, it requires
-that $gb=b$ for all $g\in S_{n}\times S_{m}$. The group $S_{n}\times S_{m}$
-is isomorphic to a subgroup $G\in S_{nm}$ and now let us look at the
-homomorphism between the two groups, where $S_{n}\times S_{m}$ acts
-as described above and $S_{nm}$ acts on vectors in $\RF^{nm}$. We
-have 
-\[
-gA=g_{l}Ag_{r}^{T}=P_{l}AP_{r}^{T}.
-\]
+it leads to $Wg=gW$ and equivalently $gWg^T=W$. Moreover, it requires
+that $gb=b$ for all $g\in G$. 
+We have 
+\begin{equation}
+gA=g_lAg_r^T=P_lAP_r^T.
+\end{equation}
 By vectorizing the above we obtain 
-\[
-\text{vec}\left(P_{l}AP_{r}^{T}\right)=\left(P_{r}\otimes P_{l}\right)\vec(A)=\left(P_{r}\otimes P_{l}\right)v
-\]
+\begin{equation}
+\vec\left(P_lAP_r^T\right)
+=
+\left(P_r\otimes P_l\right)\vec(A)
+\Rightarrow
+P_{nm} = \left(P_r\otimes P_l\right)
+\end{equation}
 For $b$, we can see from (\ref{eq:condition_affine}) that this means
-that $b$ is constant, $b=\left[\begin{array}{ccc}
-1 & \cdots & 1\end{array}\right]c$. This can be seen by applying the inverse vectorization operation on $b$
-and seeing that the condition (\ref{eq:condition_affine}) requires that
-all values of $b$ will be the same since $S_{n}\times S_{m}$ is
-two times transitive on $\RF^{n\times m}$.
+that $b$ is constant, $b = c\cdot \oneb $. This can be seen by applying the inverse vectorization operation on $b$.
+Since the condition (\ref{eq:condition_affine}) requires that $b$ will be invariant to the action of $g$, and by acting on $b$ we can replace each index $\vec^{-1}(b_{i,j})$ with any other index.
+Therefore, all values of $b$ required to be the same.
 
-For $W$ we have $Wg=gW\Rightarrow gWg^{-1}=W$. Thus, for the permutation
-$P_{g}$ representing $g\in S_{nm}$ which fulfills $P=P_{r}\otimes P_{l}$,
-we have $W_{i,j}=W_{g^{-1}(i),g^{-1}(j)}$, therefore we look at
-the orbits of $W$ induced by $G$. 
-
-Let us look at the action of the permutation $g^{-1}=(g_{l}^{-1},g_{r}^{-1})$
-on the vector $v$. We take the inverse for convenience of notation.
-Originally, the element with the index $A_{i,j}$ moves to $v_{i+n\cdot j}$,
+Let us look at the action of the permutation $g^{-1}=(g_l^{-1},g_r^{-1})$
+on the vector $v$. We take the inverse $g^{-1}$ for convenience of notation.
+Originally, the element with the index $A_{i,j}$ moves to $v_{i+n(j-1)}$,
 therefore 
-\[
-\left(g^{-1}A\right)_{i,j}=A_{g_{l}(i),g_{r}(j)}=v_{g_{l}(i)+n\left(g_{r}(j)-1\right)}.
-\]
+\begin{equation}
+\left(g^{-1}A\right)_{i,j}
+=
+A_{g_l(i),g_r(j)}
+=
+v_{g_l(i)+n\left(g_r(j)-1\right)}
+.
+\end{equation}
 Consequently, for an index $1\leq k\leq nm$, define $j=k//n$ as the
-truncating integer division and $i=k\%n$ as the modulo operation, thus $\left(g^{-1}v\right)_{k}=v_{g_{l}(i)+n\cdot\left(g_{r}(j)-1\right)}$.
-Let $k,l$ be indices in $\left[1,\ldots,nm\right]$ with the decompositions
-$k=i_{1}+nj_{1}$ and $l=i_{2}+nj_{2}$. Then $\left(g^{-1}Wg\right)_{k,l}=W_{g_{l}(i_{1})+n\cdot\left(g_{r}(j_{1})-1\right),g_{l}(i_{2})+n\left(g_{r}(j_{2})-1\right)}$. 
+truncating integer division and $i=k\%n$ as the modulo operation, thus 
+$\left(g^{-1}v\right)_k=v_{g_l(i)+n\cdot\left(g_r(j)-1\right)}$.
+Let $k,l$ be indexes in $\left[1,\ldots,nm\right]$ with the decomposition
+$k=i_1+n(j_1-1)$ and $l=i_2+n(j_2-1)$. 
+Then 
+$\left(g^{-1}Wg\right)_{k,l}
+=
+W_{g_l(i_1)+n\cdot\left(g_r(j_1)-1\right),g_l(i_2)+n\left(g_r(j_2)-1\right)}$. 
 
 \subsubsection{Orbit analysis}
 
-Let us look at the possible orbits in the index space $X^{2}=\left\{ 1,2,\ldots,nm\right\} ^{2}$.
-Indices $\left(k',l'\right)$ can be on the same orbits as $\left(k,l\right)$
-if and only if there exists a permutation $\left(g_{l},g_{r}\right)\in S_{n}\times S_{m}$
+Let us look at the possible orbits in the index set $X^{2}=\left\{ 1,2,\ldots,nm\right\} ^{2}$.
+Indexes $\left(k',l'\right)$ can be on the same orbits as $\left(k,l\right)$
+if and only if there exists a permutation $\left(g_l,g_r\right)\in S_n\times S_{m}$
 such that 
-\[
+\begin{equation}
 \begin{cases}
-k' & =g_{l}(i_{1})+n\left(g_{r}(j_{1})-1\right)\\
-l' & =g_{l}(i_{2})+n\left(g_{r}(j_{2})-1\right)
-\end{cases}.
-\]
-Define $i_{3},i_{4},j_{3},j_{4}$ such that $k'=i_{3}+n(j_{3}-1)$
-and $l'=i_{4}+n(j_{4}-1)$. It is clear that we can create equivalence
+k' & =g_l(i_1)+n\left(g_r(j_1)-1\right)\\
+l' & =g_l(i_2)+n\left(g_r(j_2)-1\right)
+\end{cases}
+\label{eq:indexes_transformation}
+.
+\end{equation}
+Define $i_3,i_4,j_3,j_4$ such that $k'=i_3+n(j_3-1)$
+and $l'=i_4+n(j_4-1)$. It is clear that we can create equivalence
 groups by the rule: 
-\[
-\left(i_{1}{}_{=}^{\neq}i_{2}\right)\wedge\left(j_{1}{}_{=}^{\neq}j_{2}\right)
-\]
-. It is clear that $i_{3}=i_{4}$ holds if and only if $i_{1}=i_{2}$,
-since by applying $g_{l}$ we have $g_{l}(i_{1})=g_{l}(i_{2})=i_{3}=i_{4}$,
-and since $g_{l}$ is a bijection. The same goes for $j_{1}=j_{2}$. 
+\begin{equation}
+\left(i_1{}_{=}^{\neq}i_2\right)
+\wedge
+\left(j_1{}_{=}^{\neq}j_2\right)
+.
+\end{equation}
+It is clear that $i_3=i_4$ holds if and only if $i_1=i_2$,
+since by applying $g_l$ we have $g_l(i_1)=g_l(i_2)=i_3=i_4$,
+and since $g_l$ is a bijection. The same goes for $j_3=j_4$. 
 
 These are the orbits and the explanation for why they are the only orbits
-is as follows: if $i_{1}=i_{2}$ then we can move to any other $k',l'$
-that has $i_{3}=i_{4}$ by applying the right $g_{l}(i_{1})=i_{3}$.
-If $i_{1}\neq i_{2}$ we can move to any other indices $i_{3}\neq i_{4}$
-since $S_{n}$ is 2-transitive. The same goes for the indices $j$. Therefore
+is as follows: if $i_1=i_2$ then we can move to any other $k',l'$
+that has $i_3=i_4$ by applying the right $g_l(i_1)=i_3$.
+If $i_1\neq i_2$ we can move to any other indexes $i_3\neq i_4$
+since $S_n$ is 2-transitive. The same goes for the indexes $j$. Therefore,
 we will have only these 4 orbits:
 \begin{align*}
-O_{=i=j} & :i_{1}=i_{2},j_{1}=j_{2}\\
-O_{=i\neq j} & :i_{1}=i_{2},j_{1}\neq j_{2}\\
-O_{\neq i=j} & :i_{1}\neq i_{2},j_{1}=j_{2}\\
-O_{\neq i\neq j} & :i_{1}\neq i_{2},j_{1}\neq j_{2}
+O_{=i=j} & :i_1=i_2,j_1=j_2\\
+O_{=i\neq j} & :i_1=i_2,j_1\neq j_2\\
+O_{\neq i=j} & :i_1\neq i_2,j_1=j_2\\
+O_{\neq i\neq j} & :i_1\neq i_2,j_1\neq j_2
 \end{align*}
 
 
 \subsection{~}
 
-For $n=m=3$ we will obtain $W\in\RF^{9\times9}$ and $b\in\RF^{9}$
+For $n=m=3$ we will obtain $W\in\RF^{9\times9}$ and $b\in\RF^{9} = c\cdot\oneb$
 
 \begin{center}
 \begin{tikzpicture}[scale=0.5]
@@ -165,7 +189,7 @@ For $n=m=3$ we will obtain $W\in\RF^{9\times9}$ and $b\in\RF^{9}$
         \foreach \jk in {1,...,\m} {
             \foreach \il in {1,...,\n} {
                 \foreach \jl in {1,...,\m} {
-                    % Compute the indices
+                    % Compute the indexes
                     \pgfmathsetmacro{\k}{int(\ik + (\jk-1)*\n)}
                     \pgfmathsetmacro{\l}{int(\il + (\jl-1)*\n)}
                     % Color according to orbit type
@@ -202,57 +226,49 @@ In the case of a linear invariant layer, for all $v\in\RF^{nm}$ and
 $g\in G$ we have:
 \begin{align*}
 f(gv) & =f(v)\\
-\Rightarrow w^{T}gv+b & =w^{T}v+b\\
-\Rightarrow g^{T}w & =w
+\Rightarrow w^Tgv+b & =w^Tv+b\\
+\Rightarrow g^Tw & =w
 \end{align*}
-This is true for all biases $b\in\RF$. Consider index $k=i+n(j-1)$.
-For $w$ we have $\left(g^{T}w\right)_{k}=w_{g(k)}=w_{g_{l}(i)+n(g_{r}(j)-1)}$.
-In this case the orbit is the entire vector $w$ which means that
-$w=\lambda\mathbf{1}$. 
+For $w\in\RF^{nm}$, this condition is equivalent to the condition on $b$ in the previous clause. 
+Therefore, $w=c_2 \cdot \oneb$.
 
 \subsection{~}
 
-In the case of 3-tensors with the symmetric group $S_{N_{1}}\times S_{N_{2}}\times S_{N_{3}}$
-applied independently to each index axis of the tensor, we have: 
-\[
-v=\vec(A)
-\]
- and 
-\[
-v_{m}=a_{i_{1},i_{2},i_{3}}
-\]
-where $m=i_{1}+N_{1}(i_{2}-1)+N_{1}N_{2}(i_{3}-1)$. Define $k=i_{1}^{k}+N_{1}(i_{2}^{k}-1)+N_{1}N_{2}(i_{3}^{k}-1)$
-and $l=i_{1}^{l}+N_{1}(i_{2}^{l}-1)+N_{1}N_{2}(i_{3}^{l}-1)$. We will
+In the case of 3-tensors with the symmetric group is $S_{N_1}\times S_{N_2}\times S_{N_3}$
+applied independently to each index axis of the tensor. We have: 
+\begin{equation}
+v=\vec(A) \,\,\,   v_k=a_{i_1,i_2,i_3}
+,
+\end{equation}
+where $k=i_1+N_1(i_2-1)+N_1N_2(i_3-1)$. Define $k=i_1^{k}+N_1(i_2^{k}-1)+N_1N_2(i_3^{k}-1)$
+and $l=i_1^{l}+N_1(i_2^{l}-1)+N_1N_2(i_3^{l}-1)$. We will
 have the same derivation as in the previous clause \ref{subsec:q21},
 thus 
 \begin{align*}
 W_{k,l} & =W_{g(k),g(l)}
 \end{align*}
-The indices $\left(k,l\right)$ can transform to 
+The indexes $\left(k,l\right)$ can transform to 
 \begin{align*}
-k' & =g_{1}(i_{1}^{k})+N_{1}(g_{2}(i_{2}^{k})-1)+N_{1}N_{2}(g_{3}(i_{3}^{k})-1)\\
-l' & =g_{1}(i_{1}^{l})+N_{1}(g_{2}(i_{2}^{l})-1)+N_{1}N_{2}(g_{3}(i_{3}^{l})-1)
+k' & =g_1(i_1^{k})+N_1(g_2(i_2^{k})-1)+N_1N_2(g_3(i_3^{k})-1)\\
+l' & =g_1(i_1^{l})+N_1(g_2(i_2^{l})-1)+N_1N_2(g_3(i_3^{l})-1)
 \end{align*}
 where the equivalence relations follow the same pattern as before,
 thus the orbits are 
-
-\[
-\wedge_{n=1}^{3}i_{n}^{k}{}_{=}^{\neq}i_{n}^{l}.
-\]
-In each coordinate in the original matrix $A$, the permutation is 2-transitive,
-therefore we can move to any other configuration. As a result, the orbits are:
+\begin{equation}
+\bigwedge_{n=1}^{3} i_n^{k}{}_{=}^{\neq}i_n^{l}
+.    
+\end{equation}
+As a result, the orbits are:
 \begin{align*}
-O_{=i_{1}=i_{2}=i_{3}} & :i_{1}^{k}=i_{1}^{l},i_{2}^{k}=i_{2}^{l},i_{3}^{k}=i_{3}^{l}\\
-O_{=i_{1}=i_{2}\neq i_{3}} & :i_{1}^{k}=i_{1}^{l},i_{2}^{k}=i_{2}^{l},i_{3}^{k}\neq i_{3}^{l}\\
-O_{=i_{1}\neq i_{2}=i_{3}} & :i_{1}^{k}=i_{1}^{l},i_{2}^{k}\neq i_{2}^{l},i_{3}^{k}=i_{3}^{l}\\
-\vdots\\
-O_{=i_{1}=i_{2}=i_{3}} & :i_{1}^{k}\neq i_{1}^{l},i_{2}^{k}\neq i_{2}^{l},i_{3}^{k}\neq i_{3}^{l}
+O_{=i_1=i_2=i_3} & :i_1^{k}=i_1^{l},i_2^{k}=i_2^{l},i_3^{k}=i_3^{l}\\
+O_{=i_1=i_2\neq i_3} & :i_1^{k}=i_1^{l},i_2^{k}=i_2^{l},i_3^{k}\neq i_3^{l}\\
+O_{=i_1\neq i_2=i_3} & :i_1^{k}=i_1^{l},i_2^{k}\neq i_2^{l},i_3^{k}=i_3^{l}\\
+\vdots &\\
+O_{\neq i_1 \neq i_2\neq i_3} & :i_1^{k}\neq i_1^{l},i_2^{k}\neq i_2^{l},i_3^{k}\neq i_3^{l}
 \end{align*}
 
-For $N_{1}=N_{2}=N_{3}=3$ we will have $W\in\RF^{27\times27}$
-and $b\in\RF^{27} = \lambda\mathbf{1}$. $W$ can be visualized as follows:
-%
-%
+For $N_1=N_2=N_3=3$, we obtain $W\in\RF^{27\times27}$ and $b\in\RF^{27}$.
+
 \begin{center}
 \begin{tikzpicture}[scale=0.5]
     \def\N{3} % Number of rows
@@ -264,7 +280,7 @@ and $b\in\RF^{27} = \lambda\mathbf{1}$. $W$ can be visualized as follows:
                 \foreach \il in {1,...,\N} {
                     \foreach \jl in {1,...,\M} {
                         \foreach \ql in {1,...,\Q} {
-                            % Compute the indices
+                            % Compute the indexes
                             \pgfmathsetmacro{\k}{int(\ik + (\jk-1)*\N + (\qk-1)*\N*\M)}
                             \pgfmathsetmacro{\l}{int(\il + (\jl-1)*\N + (\ql-1)*\N*\M)}
                             % Color according to orbit type
