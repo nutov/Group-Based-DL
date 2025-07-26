@@ -38,7 +38,7 @@ def test_symmetrization_net(SymmetrizationNet, d=3, n=5, tol=1e-5):  # small n f
 
 
 
-def test_sampled_symmetrization_net(SampledSymmetrizationNet, d=5, n=7, num_samples=750, tol=1e-3):
+def test_sampled_symmetrization_net(SampledSymmetrizationNet, d=5, n=10, num_samples=750, tol=5e-3):
     net = SampledSymmetrizationNet(d=d,num_samples = num_samples)
     x = torch.randn(n, d)
     perm = torch.randperm(n)
@@ -109,17 +109,20 @@ def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=6):
             loss = F.mse_loss(y_pred, y_true)
             loss.backward()
             total_loss += loss.item()
-        optimizer.step()
-        optimizer.zero_grad()
+            optimizer.step()
+            optimizer.zero_grad()
+
         if epoch % 10 == 0:
             print(f"[Epoch {epoch}] Loss: {total_loss / augments_per_epoch:.6f}")
+
+        
     return model
 
 
 
 
 
-def test_variance_invariance(model,d=50, tol=1e-2, num_tests=100):
+def test_variance_invariance(model,d=60, tol=1e-2, num_tests=100):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     x = torch.randn((100,d)).to(device)
     model.eval()

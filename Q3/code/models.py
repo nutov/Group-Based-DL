@@ -61,7 +61,7 @@ class Sampled_Symmetrization_Net(nn.Module):
 
     def forward(self, x):
         N,_ = x.size()
-        x_ = torch.zeros_like(self.linear(x))
+        out = torch.zeros_like(self.linear(x))
 
         for _ in range(self.num_samples):
             perm = torch.randperm(N)#, device=x.device)
@@ -70,9 +70,9 @@ class Sampled_Symmetrization_Net(nn.Module):
 
         #it = create_permutations_sampled(x,self.num_samples)
         #for perm in it:
-        #    x_ += self.linear(x[perm,:])
+        #    out += self.linear(x[perm,:])
         
-        #return x_ / self.num_samples
+        #return out / self.num_samples
 
 
 class Linear_eq_layer(nn.Module):
