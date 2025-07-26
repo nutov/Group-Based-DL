@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from utils import *
+import math
 
 
 class Canonization_Net(nn.Module):
@@ -20,9 +21,10 @@ class Canonization_Net(nn.Module):
         canonize by sorting w.r.t norms of the elements in the dataset , 
         this is permutation invariant  
         """
-        _, indices = torch.sort(x[:,0],descending=True)
+        norms = torch.norm(x, dim=1)
+        _, idx = torch.sort(norms, descending=True, stable=True)
 
-        x = x[indices,:]
+        x = x[idx,:]
         return self.linear(x)
 
 
@@ -40,10 +42,9 @@ class Symmetrization_Net(nn.Module):
     def forward(self, x):
         N,_ = x.size()
         x_ = torch.zeros_like(self.linear(x))
-        elemnts = [k for k in range(N)]
-        for perm in permutations(elemnts):
-            x_ += self.linear(x[perm,:])
-        return x_
+        for perm in permutations(range(N)): 
+            x_ += self.linear(x[list(perm)])
+        return x_/ math.factorial(N)  
         
             
 
@@ -61,11 +62,17 @@ class Sampled_Symmetrization_Net(nn.Module):
     def forward(self, x):
         N,_ = x.size()
         x_ = torch.zeros_like(self.linear(x))
-        it = create_permutations_sampled(x,self.num_samples)
-        for perm in it:
-            x_ += self.linear(x[perm,:])
+
+        for _ in range(self.num_samples):
+            perm = torch.randperm(N)#, device=x.device)
+            out += self.linear(x[perm,:])
+        return out.mean(dim=0)   
+
+        #it = create_permutations_sampled(x,self.num_samples)
+        #for perm in it:
+        #    x_ += self.linear(x[perm,:])
         
-        return x_ / self.num_samples
+        #return x_ / self.num_samples
 
 
 class Linear_eq_layer(nn.Module):
