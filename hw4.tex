@@ -13,27 +13,25 @@
 
 \section{~}
 
-We study about two realizations of the action of the symmetric group $S_n$ for finite natural $n$. 
-\begin{itemize}
-    \item $S_n$ acts on the index set $X=\ensuremath{\{1,2,\ldots,n\}}$ in the following way: $g\cdot i = g(i)$ for all $g \in S_n$ and $i \in X$.
-    \item $S_n$ acts on the vector $v \in \RF^{n}$ by permuting its coordinates: $\left(gv\right)_{i}=v_{g^{-1}(i)}$ for all $g \in S_n$ and $i \in X$.
-\end{itemize}
-We name the first action as the \textbf{index action} and the second one as the \textbf{coordinate action}.
-These actions are equivalent since the the coordinate action is literally the index action applied to the indexes of the vector $v$.
-The standard permutation representation of $S_n$  on $\RF^{n}$ is formulated as $\rho: S_n \to GL(n, \RF)$ defined by $\rho(g)_{i,j} = \delta_{j,g(i)}$, where $\delta$ is the Kronecker delta function.
 
-Let $G \leq S_n$ be a subgroup of the symmetric group $S_n$, and lets look on the $G$-linear transformation $T:\RF^{n}\rightarrow\RF^{n}$ that are equivariant with respect to $G$. Thus, we have 
+We study two realizations of the action of the symmetric group $S_n$ for finite $n$:
+\begin{itemize}
+    \item \textbf{Index action:} $S_n$ acts on $X = \{1,2,\ldots,n\}$ by $g \cdot i = g(i)$.
+    \item \textbf{Coordinate action:} $S_n$ acts on $v \in \RF^n$ by permuting coordinates: $(gv)_i = v_{g^{-1}(i)}$.
+\end{itemize}
+These actions are equivalent, as the coordinate action is the index action applied to the vector indices. The standard permutation representation is $\rho: S_n \to GL(n, \RF)$, with $\rho(g)_{i,j} = \delta_{j,g(i)}$.
+
+Let $G \leq S_n$. Let's look at the $G$-equivariant linear maps $T: \RF^n \to \RF^n$, such that
 \begin{equation}
-T\rho(g)v=\rho(g)Tv
-,
+T\rho(g)v = \rho(g)Tv
 \label{eq:equivariantCondition}
 \end{equation}
-for all $g\in G$ and $v\in\RF^{n}$.
+for all $g \in G$, $v \in \RF^n$.
 
-We can solve \eqref{eq:equivariantCondition} by two methodologies:
+We can solve \eqref{eq:equivariantCondition} in two ways:
 \begin{itemize}
-    \item \textbf{Orbits of Indexes}
-    \item \textbf{ Character Theory}
+    \item \textbf{Orbits of Indexes:} Looking on the condition \eqref{eq:equivariantCondition} applied to the indexes of $T$.
+    \item \textbf{Character Theory:} Looking on the condition \eqref{eq:equivariantCondition} applied to the representation $\rho$ of $G$.
 \end{itemize}
 
 \paragraph{Orbits of Indexes}
@@ -58,7 +56,7 @@ The number of orbits can be computed using Burnside's lemma as in Tutorial 12 Pr
 where $X^g = \{ x \in X \mid g \cdot x = x \}$ is the set of fixed elements of $g$.
 
 \paragraph{Character Theory}
-In the course we have seen the proof that the dimensionality of the space of $G$-linear transformations $HOM_G(\RF^2,\RF^2)$ is equal to 
+In the course we have seen the proof that the dimensionality of the space of $G$-linear transformations $HOM_G(\RF^n,\RF^n)$ is equal to 
 \begin{equation}
     \dim HOM_G(\RF^n,\RF^n) = \frac{1}{|G|} \sum_{g \in G} \tr(\rho(g))^2
     \label{eq:DimHomG}
@@ -71,16 +69,17 @@ From condition \eqref{eq:Tcondition} we have
     \label{eq:rhoT}
 \end{equation}
 We can see that $\vec(T)$ is an eigenvector of $\rho(g) \otimes \rho(g)$ with eigenvalue 1 for all $g \in G$. 
-Moreover, let $\{O_1, ..., O_k\}$ be the orbits of the action of $G$ on $X^2$, where $k$ is the number of orbits; and let $\oneb_{O_i} \in \RF^{n\times n}$ the indicator matrix of the orbit $O_i$, i.e. $\oneb_{O_i}(i,j) = 1$ if $(i,j) \in O_i$ and $0$ otherwise. 
-Then, $\vec(\oneb_{O_i})$ must be an eigenvector of $\rho(g) \otimes \rho(g)$ with eigenvalue 1 for all $g \in G$ as well, since it is constant when $g$ acts on it. 
-Define  $U^G = \{v \in \RF^{n\times n} \mid (\rho(g) \otimes \rho(g)) v = v, \text{for all} g \in G\}$, as the fixed subspace of $\RF^{n\times n}$ under the action of $G$. In the course we saw that the dimension of this subspace is equal to $\dim HOM_G(\RF^n,\RF^n)$, and is equal to $\tr(\pi_{U^G})$, where $\pi_{U^G}$ is the projection operator onto $U^G$. We showed that $\pi_{U^G} = \frac{1}{|G|} \sum_{g \in G} \rho(g) \otimes \rho(g)$, and therefore we have
+Moreover, let $\{O_1, ..., O_k\}$ be the orbits of the action of $G$ on $X^2$, where $k$ is the number of orbits; and let $\oneb_{O_i} \in \RF^{n\times n}$ be the indicator matrix of the orbit $O_i$, i.e. $\oneb_{O_i}(i,j) = 1$ if $(i,j) \in O_i$ and $0$ otherwise. 
+Then, $\vec(\oneb_{O_i})$ must be an eigenvector of $\rho(g) \otimes \rho(g)$ with eigenvalue 1 for all $g \in G$ as well, since it is constant when $g$ acts on it.
+Define  $U^G = \{v \in \RF^{n\times n} \mid (\rho(g) \otimes \rho(g)) v = v, \text{for all } g \in G\}$, as the fixed subspace of $\RF^{n\times n}$ under the action of $G$. $U^G$ is isomorphic to the space of $G$-linear transformations $HOM_G(\RF^n,\RF^n)$. In the course we saw that the dimension of $U^G$ is equal $\tr(\pi_{U^G})$, where $\pi_{U^G}$ is the projection operator onto $U^G$. We showed that $\pi_{U^G} = \frac{1}{|G|} \sum_{g \in G} \rho(g) \otimes \rho(g)$, and therefore we have
 \begin{equation}
     \dim HOM_G(\RF^n,\RF^n) = \frac{1}{|G|} \sum_{g \in G} \tr(\rho(g) \otimes \rho(g)) = \frac{1}{|G|} \sum_{g \in G} \tr(\rho(g))^2
     .
     \label{eq:DimHomG2}
 \end{equation}
 This is the same as \eqref{eq:DimHomG}, and each eigenvalue of $\rho(g) \otimes \rho(g)$ corresponds to an orbit of the action of $G$ on $X^2$.
-It is clear that each orbit corresponds to a unique eigenvalue of $\rho(g) \otimes \rho(g)$, but the other way need to be explained. If we have an eigenvalue $\lambda$ of $\rho(g) \otimes \rho(g)$, it must satisfy \eqref{eq:indexCondition}, which means that it must be constant on the orbits, therefore it can be represented as a linear combination of the $\{O_i\}_{i=1}^k$, and therefore and therefore a combination of the eigenvalues of $\rho(g) \otimes \rho(g)$ that correspond to $\{O_i\}_{i=1}^k$. So the dimensionality of the space of $G$-linear transformations is equal in both cases.
+It is clear that each orbit corresponds to a unique eigenvector of $\rho(g) \otimes \rho(g)$, but the other way need to be explained. If we have an eigenvector $v$ of $\rho(g) \otimes \rho(g)$, it must satisfy \eqref{eq:indexCondition}, which means that it must be constant on the orbits, therefore it can be represented as a linear combination of the $\{\vec(O_i)\}_{i=1}^k$, and therefore it cannot add a dimension to the eigenvalues corresponding to the orbits.
+In the case of index action $X^g$ corresponding to the fixed points of $g$ acting on the indexes. In the case of coordinate action, $U^G$ corresponds to the fixed vector space of $G$ acting on the vectorization of the matrices $T$.
 
 
 
@@ -91,44 +90,44 @@ It is clear that each orbit corresponds to a unique eigenvalue of $\rho(g) \otim
 
 
 
-\subsection{First attempt}
+% \subsection{First attempt}
 
 
-Let $G\leq S_n$ be a subgroup of the permutation group $S_n$
-acting on the index set $X=\ensuremath{\{1,2,\ldots,n\}}$
-where $n$ is a finite natural number. An element $g$ acts on a vector
-$v\in\RF^{n}$ on the coordinate $i$ by $\left(gv\right)_{i}=v_{g^{-1}(i)}$.
-Consider a $G$-linear transformation $T:\RF^{n}\rightarrow\RF^{n}$.
-Thus, $T(gv)=gT(v)$. Therefore, $T$ must fulfill $Tgv=gTv$ for all
-$g\in G$ and $v\in\RF^{n}$. As a result $Tg=gT$ and equivalently,
-$g^{-1}Tg=T$ for all $g\in G$ (in the lectures we used $W$). Applying
-$g$ from the right on the columns of $T$ and $g^{-1}$ from the
-left on the rows of $T$ results in the following condition: 
-\begin{equation}
-T_{i,j}=T_{g^{-1}(i),g^{-1}(j)}.\label{eq:q1_condition}
-\end{equation}
-$g$ acts on $T$ and on each orbit of $T$ the requirement is
-that $T$ is constant. Thus, the condition requires that $T_{i,j}=T_{l,m}$
-if $Orb_{G}\left((i,j)\right)=Orb_{G}\left((l,m)\right)$. Therefore
-the number of free parameters is the number of orbits. 
+% Let $G\leq S_n$ be a subgroup of the permutation group $S_n$
+% acting on the index set $X=\ensuremath{\{1,2,\ldots,n\}}$
+% where $n$ is a finite natural number. An element $g$ acts on a vector
+% $v\in\RF^{n}$ on the coordinate $i$ by $\left(gv\right)_{i}=v_{g^{-1}(i)}$.
+% Consider a $G$-linear transformation $T:\RF^{n}\rightarrow\RF^{n}$.
+% Thus, $T(gv)=gT(v)$. Therefore, $T$ must fulfill $Tgv=gTv$ for all
+% $g\in G$ and $v\in\RF^{n}$. As a result $Tg=gT$ and equivalently,
+% $g^{-1}Tg=T$ for all $g\in G$ (in the lectures we used $W$). Applying
+% $g$ from the right on the columns of $T$ and $g^{-1}$ from the
+% left on the rows of $T$ results in the following condition: 
+% \begin{equation}
+% T_{i,j}=T_{g^{-1}(i),g^{-1}(j)}.\label{eq:q1_condition}
+% \end{equation}
+% $g$ acts on $T$ and on each orbit of $T$ the requirement is
+% that $T$ is constant. Thus, the condition requires that $T_{i,j}=T_{l,m}$
+% if $Orb_{G}\left((i,j)\right)=Orb_{G}\left((l,m)\right)$. Therefore
+% the number of free parameters is the number of orbits. 
 
-We define $U=X\times X$. Burnside\textquoteright s Lemma states that
-\begin{equation}
-\left|U\slash G\right|
-=
-\frac{1}{\left|G\right|}\sum_{g\in G}\left|U^{g}\right|
-=
-\frac{1}{\left|G\right|}\sum_{g\in G}\left|X^{g}\right|^{2}
-=
-\frac{1}{\left|G\right|}\sum_{g\in G}\chi_{\rho}(g)^{2}
-,
-\label{eq:burnside}
-\end{equation}
- where $\left|U\slash G\right|$ is the number of orbits and $U^{g}=\left\{ u\in U\mid gu=u\right\} $
-is the set of elements in $U$ that $g$ doesn't change. We have the
-property of $\left|U^{g}\right|=\chi_{\sigma}(g)$,
+% We define $U=X\times X$. Burnside\textquoteright s Lemma states that
+% \begin{equation}
+% \left|U\slash G\right|
+% =
+% \frac{1}{\left|G\right|}\sum_{g\in G}\left|U^{g}\right|
+% =
+% \frac{1}{\left|G\right|}\sum_{g\in G}\left|X^{g}\right|^{2}
+% =
+% \frac{1}{\left|G\right|}\sum_{g\in G}\chi_{\rho}(g)^{2}
+% ,
+% \label{eq:burnside}
+% \end{equation}
+%  where $\left|U\slash G\right|$ is the number of orbits and $U^{g}=\left\{ u\in U\mid gu=u\right\} $
+% is the set of elements in $U$ that $g$ doesn't change. We have the
+% property of $\left|U^{g}\right|=\chi_{\sigma}(g)$,
 
-\section{Question 2}
+\section{~}
 
 \subsection{~}
 
