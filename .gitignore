@@ -235,6 +235,7 @@ __marimo__/
 *.glo
 *.gls
 *.glg
-
+# All .idea directories
+.idea/
 
 Q4/modelnet40*
