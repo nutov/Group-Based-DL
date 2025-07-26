@@ -110,8 +110,10 @@ class AugmentedInvariantNet(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
             #nn.Flatten(),  # input shape (n, d) → (n*d,)
-            nn.Linear(d , d_hidden),  # assuming n = 10
+            nn.Linear(d , d_hidden),  
             nn.ReLU(),
+            #nn.Linear(d_hidden , d_hidden),
+            #nn.ReLU(),
             nn.Linear(d_hidden, 1)
         )
         self.device = "cuda" if torch.cuda.is_available() else "cpu"

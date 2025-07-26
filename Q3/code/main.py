@@ -15,17 +15,17 @@ def main():
     print(f'percent of non invariant canonization {run_test(a,num_tests=num_test)}')
     print(f'percent of non invariant symmeriztion {run_test(b,num_tests=num_test)}')
     print(f'percent of non invariant sampled symmeriztion {run_test(c,num_tests=num_test)}')
-    n = 10000
-    d=60
+    n = 500
+    d=50
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     x = torch.randn((n,d)).to(device)
     
     variance_model = AugmentedInvariantNet(d=d).to(device)
     optimizer = torch.optim.Adam(variance_model.parameters(), lr=0.005)
-    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma = 0.9)
 
     
-    variance_model = train_variance_net(variance_model, optimizer, x,epochs=12500)
-    print(f'percent of non invariant trained model with augmentations: {run_test((test_variance_invariance,variance_model),num_tests=num_test)}')
+    variance_model = train_variance_net(variance_model, optimizer, x,epochs=100,sched=scheduler)
+    print(f'percent of non equivariant trained model with augmentations: {run_test((test_variance_invariance,variance_model),num_tests=num_test)}')
 
 main()
