@@ -8,6 +8,7 @@ scikit-learn
 torch_geometric
 networkx
 numpy
+PyQt5
 # For 3D point cloud loading and processing
 trimesh
 h5py
