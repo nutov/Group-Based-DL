@@ -13,6 +13,8 @@ def main():
     plot_pcd(pcd)
 
 
+
+
     num_test = 100
 
     # network optimizers
@@ -21,8 +23,13 @@ def main():
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma = 0.9)
     variance_model = train_variance_net(variance_model, optimizer, x,epochs=100,sched=scheduler)
 
+    traning_set_size = 10
+
     # canonization    
     net_canon = Canonization_Net(d_in = data_n * data_dim)
+    optimizer = torch.optim.Adam(net_canon.parameters(), lr=0.005)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma = 0.9)
+    net_canon = train_variance_net(net_canon, optimizer, x,epochs=100,sched=scheduler)
 
     # symetrization
     # samples 10 permutations from S_n

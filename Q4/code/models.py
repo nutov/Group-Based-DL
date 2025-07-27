@@ -14,15 +14,18 @@ class Canonization_Net(nn.Module):
             nn.Linear(32, 4)
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor):
         """
         X - R^(Nxd) 
         canonize by sorting w.r.t norms of the elements in the dataset , 
         this is permutation invariant  
         """
-        _, indices = torch.sort(x[:,0],descending=True)
+        norms = torch.norm(x, dim=0)
+        _, idx = torch.sort(norms, descending=True, stable=True)
 
-        x = x[indices,:]
+        x = x[idx]
+        x = self.flatten(x)
+
         return self.linear(x)
 
 

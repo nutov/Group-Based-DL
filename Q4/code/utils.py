@@ -99,36 +99,39 @@ def custom_loss(outputs, targets):
     not_mse = 0.5 * prec * torch.mean(torch.pow(outputs - targets, 2))
     return not_mse - 0.5 * torch.log(prec)
 
-def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=250,sched = None,verbose = False):
+
+def _basic_training(model,optimizer,target,data):
+    # check that the model updates
+    optimizer.zero_grad()
+    out = model(data)
+    loss = F.binary_cross_entropy(out,target)
+    loss.backward()
+    optimizer.step()
+
+def _augmentation_f(data):
+    raise NotImplemented
+    return data  #TODO
+
+def train_model(model, optimizer,train_loader, test_loader=None, epochs=100, augments_per_epoch=250,verbose = False,augmentation = False):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    x.to(device)
     model.to(device)
     for epoch in range(epochs):
-        total_loss = 0.0
-        for _ in range(augments_per_epoch):
-            perm = torch.randperm(x.size(0),device=device)
-            x_aug = x[perm]                          # permute rows
-            y_true = compute_variance_target(x_aug).to(device)  # shape: (n,1)
-            y_pred = model(x_aug).to(device)
-            loss = F.cross_entropy(y_pred, y_true)
-            #loss = custom_loss(y_pred, y_true)
-            loss.backward()
-            
-            optimizer.step()
-            optimizer.zero_grad()
-            total_loss += loss.item()
-        lr = None
-        if sched is not None:
-            sched.step()
-            lr = sched.get_last_lr()
-        if verbose:
-            if epoch % 10 == 0:
-                if lr is None:
-                    print(f"[Epoch {epoch}] Loss: {total_loss / augments_per_epoch:.6f}")
-                else:
-                    print(f"[Epoch {epoch}] Loss: {total_loss / augments_per_epoch:.6f},lr:{lr}")
+        model.train()
+        for (data,target) in train_loader:
+            if not augmentation:
+                _basic_training(model,optimizer,target,data)
+            else:
+                for _ in range(augments_per_epoch):
+                    _basic_training(model,optimizer,target,_augmentation_f(data))
+
+        if test_loader is not None:
+            model.eval()
+            with torch.no_grad():
+                for data,target in test_loader:
+                    out = model(data)
 
     return model
+    
 
 
 
