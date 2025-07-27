@@ -236,5 +236,8 @@ __marimo__/
 *.gls
 *.glg
 
-
+.idea/
+# all files in modelnet40_normal_resampled
+modelnet40_normal_resampled/*
+*.zip
 Q4/modelnet40*

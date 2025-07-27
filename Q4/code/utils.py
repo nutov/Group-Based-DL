@@ -1,3 +1,6 @@
+import json
+from os import path as osp
+
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -149,3 +152,14 @@ def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
             if not torch.allclose(y_ref[perm], y_alt, atol=tol):
                 return False
     return True
+
+# Load a data path from config.json (user-specific, not tracked by git)
+def get_data_path():
+    config_path = osp.join(osp.dirname(__file__), 'config.json')
+    example_path = osp.join(osp.dirname(__file__), 'config.example.json')
+    if osp.exists(config_path):
+        with open(config_path) as f:
+            return json.load(f)["data_path"]
+    else:
+        with open(example_path) as f:
+            return json.load(f)["data_path"]
