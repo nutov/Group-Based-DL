@@ -108,6 +108,7 @@ class Linear_eq_Net(nn.Module):
 class AugmentedInvariantNet(nn.Module):
     def __init__(self, d=10, d_hidden=32):
         super().__init__()
+        self.flatten = nn.Flatten()
         self.net = nn.Sequential(
             #nn.Flatten(),  # input shape (n, d) → (n*d,)
             nn.Linear(d , d_hidden),  

@@ -1,10 +1,54 @@
-from data import *
+import data
 from viz import *
+from models import *
+data_n = int(256)
+data_dim = int(3)
 
 def main():
-    data = DataSet()
-    pcd = data.sample_Pcd_per_category(data.categories[0],1,num_samples=1024)[0]
+
+    # data preprocessing
+    absolute_path_to_data = '/home/nutov/Desktop/study/GDL/hw_git/Group-Based-DL/Q4/modelnet40_normal_resampled'
+    cloud_data = data.PointCloudDataset(absolute_path_to_data)
+    pcd = cloud_data.sample_Pcd_per_category(cloud_data.categories[0],1,num_samples=256)[0]
     plot_pcd(pcd)
+
+
+    num_test = 100
+
+    # network optimizers
+    variance_model = AugmentedInvariantNet(d=data_n * data_n).to(device)
+    optimizer = torch.optim.Adam(variance_model.parameters(), lr=0.005)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma = 0.9)
+    variance_model = train_variance_net(variance_model, optimizer, x,epochs=100,sched=scheduler)
+
+    # canonization    
+    net_canon = Canonization_Net(d_in = data_n * data_dim)
+
+    # symetrization
+    # samples 10 permutations from S_n
+
+
+    net_canon
+    a = (test_canonization_net,Canonization_Net)
+    b = (test_symmetrization_net,Symmetrization_Net)
+    c = (test_sampled_symmetrization_net,Sampled_Symmetrization_Net)
+
+    print(f'percent of non invariant canonization {run_test(a,num_tests=num_test)}')
+    print(f'percent of non invariant symmeriztion {run_test(b,num_tests=num_test)}')
+    print(f'percent of non invariant sampled symmeriztion {run_test(c,num_tests=num_test)}')
+    n = 500
+    d=50
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    x = torch.randn((n,d)).to(device)
+    
+
+
+    
+    
+    print(f'percent of non equivariant trained model with augmentations: {run_test((test_variance_invariance,variance_model),num_tests=num_test)}')
+
+
+
 
 if __name__ == '__main__':
     main()

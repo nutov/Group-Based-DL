@@ -1,15 +1,15 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
-from utils import *
+from Q4.code.utils import *
 
 
 class Canonization_Net(nn.Module):
-    def __init__(self,d = 10):
+    def __init__(self,d_in = 10):
         super().__init__()
         self.flatten = nn.Flatten()
         self.linear = nn.Sequential(
-            nn.Linear(d, 32),
+            nn.Linear(d_in, 32),
             nn.ReLU(),
             nn.Linear(32, 4)
         )

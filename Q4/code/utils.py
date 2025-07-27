@@ -12,8 +12,7 @@ def create_permutations_sampled(x:torch.tensor,K:int):
         yield np.random.permutation(N)
 
 
-def test_canonization_net(CanonizationNet, d=10, n=20, tol=1e-5):
-    net = CanonizationNet(d=d)
+def test_canonization_net(net, d=10, n=20, tol=1e-5):
     x = torch.randn(n, d)
     perm = torch.randperm(n)
     x_perm = x[perm]
@@ -111,7 +110,7 @@ def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=250,s
             x_aug = x[perm]                          # permute rows
             y_true = compute_variance_target(x_aug).to(device)  # shape: (n,1)
             y_pred = model(x_aug).to(device)
-            loss = F.mse_loss(y_pred, y_true)
+            loss = F.cross_entropy(y_pred, y_true)
             #loss = custom_loss(y_pred, y_true)
             loss.backward()
             
