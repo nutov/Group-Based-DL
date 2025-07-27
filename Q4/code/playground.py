@@ -1,7 +1,8 @@
 import data
+from Q4.code.data import get_data_path
 from viz import *
 from
-from models import *
+
 data_n = int(256)
 data_dim = int(3)
 
