@@ -105,60 +105,63 @@ def _basic_training(model,optimizer,target,data):
     return loss.item()
 
 def _augmentation_f(data):
-    raise NotImplemented
+    # raise NotImplemented
     return data  #TODO
 
-def train_model(model, optimizer, train_loader, test_loader=None, epochs=100, augments_per_epoch=250, verbose=False, augmentation=False):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+def train(model, optimizer, train_loader, test_loader=None, epochs=100, augmentations=0, verbose=False, use_augmentation=False):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     train_losses = []
     test_losses = []
+
     for epoch in range(epochs):
         model.train()
         running_loss = 0.0
         num_batches = 0
-        for data, target in train_loader:
-            data, target = data.to(device), target.to(device)
-            if not augmentation:
-                loss = _basic_training(model, optimizer, target, data)
-                running_loss += loss
-                num_batches += 1
-            else:
-                for _ in range(augments_per_epoch):
-                    aug_data = _augmentation_f(data)
-                    loss = _basic_training(model, optimizer, target, aug_data)
+        for inputs, targets in train_loader:
+            inputs, targets = inputs.to(device), targets.to(device)
+            if use_augmentation:
+                for _ in range(augmentations):
+                    aug_inputs = _augmentation_f(inputs)
+                    loss = _basic_training(model, optimizer, targets, aug_inputs)
                     running_loss += loss
                     num_batches += 1
-        avg_train_loss = running_loss / max(1, num_batches)
+            else:
+                loss = _basic_training(model, optimizer, targets, inputs)
+                running_loss += loss
+                num_batches += 1
+        if num_batches == 0:
+            print("Warning: No batches processed in this epoch. Check your data loader.")
+            continue
+
+        avg_train_loss = running_loss / num_batches
         train_losses.append(avg_train_loss)
 
-        # Evaluate on test set if provided
         avg_test_loss = None
         if test_loader is not None:
             model.eval()
             test_loss = 0.0
             test_batches = 0
             with torch.no_grad():
-                for data, target in test_loader:
-                    data, target = data.to(device), target.to(device)
-                    out = model(data)
-                    loss = F.binary_cross_entropy(out, target)
+                for inputs, targets in test_loader:
+                    inputs, targets = inputs.to(device), targets.to(device)
+                    outputs = model(inputs)
+                    loss = F.binary_cross_entropy(outputs, targets)
                     test_loss += loss.item()
                     test_batches += 1
             avg_test_loss = test_loss / max(1, test_batches)
             test_losses.append(avg_test_loss)
         if verbose:
+            msg = f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f}"
             if avg_test_loss is not None:
-                print(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f} | Test Loss: {avg_test_loss:.4f}")
-            else:
-                print(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f}")
-    # Optionally return statistics
+                msg += f" | Test Loss: {avg_test_loss:.4f}"
+            print(msg)
     stats = {
-        'train_losses': train_losses,
-        'test_losses': test_losses if test_loader is not None else None
+        "train_losses": train_losses,
+        "test_losses": test_losses if test_loader is not None else None
     }
     return model, stats
-
 
 def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
     device = "cuda" if torch.cuda.is_available() else "cpu"
