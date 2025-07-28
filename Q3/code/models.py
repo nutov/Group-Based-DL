@@ -8,8 +8,9 @@ import math
 class Canonization_Net(nn.Module):
     def __init__(self,d = 10):
         super().__init__()
-        self.flatten = nn.Flatten()
+         
         self.linear = nn.Sequential(
+            nn.Flatten(0),
             nn.Linear(d, 32),
             nn.ReLU(),
             nn.Linear(32, 4)
@@ -32,8 +33,8 @@ class Canonization_Net(nn.Module):
 class Symmetrization_Net(nn.Module):
     def __init__(self,d = 10):
         super().__init__()
-        self.flatten = nn.Flatten()
-        self.linear = nn.Sequential(
+        
+        self.linear = nn.Sequential(nn.Flatten(0),
             nn.Linear(d, 32),
             nn.ReLU(),
             nn.Linear(32, 4)
@@ -49,10 +50,9 @@ class Symmetrization_Net(nn.Module):
             
 
 class Sampled_Symmetrization_Net(nn.Module):
-    def __init__(self,d = 10,num_samples = 20):
+    def __init__(self,d = 10,num_samples = 750):
         super().__init__()
-        self.flatten = nn.Flatten()
-        self.linear = nn.Sequential(
+        self.linear = nn.Sequential(nn.Flatten(0),
             nn.Linear(d, 32),
             nn.ReLU(),
             nn.Linear(32, 4)
@@ -68,11 +68,6 @@ class Sampled_Symmetrization_Net(nn.Module):
             out += self.linear(x[perm,:])
         return out.mean(dim=0)   
 
-        #it = create_permutations_sampled(x,self.num_samples)
-        #for perm in it:
-        #    out += self.linear(x[perm,:])
-        
-        #return out / self.num_samples
 
 
 class Linear_eq_layer(nn.Module):
@@ -108,14 +103,10 @@ class Linear_eq_Net(nn.Module):
 class AugmentedInvariantNet(nn.Module):
     def __init__(self, d=10, d_hidden=32):
         super().__init__()
-        self.flatten = nn.Flatten()
-        self.net = nn.Sequential(
-            #nn.Flatten(),  # input shape (n, d) → (n*d,)
+        self.net = nn.Sequential(nn.Flatten(0),
             nn.Linear(d , d_hidden),  
             nn.ReLU(),
-            #nn.Linear(d_hidden , d_hidden),
-            #nn.ReLU(),
-            nn.Linear(d_hidden, 1)
+            nn.Linear(d_hidden, 50)
         )
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
     def forward(self, x):

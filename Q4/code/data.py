@@ -45,7 +45,7 @@ class PointCloudDataset(Dataset):
         label = self.category_to_label[category]
         data_path = osp.join(self.base_path, category, file)
         this_data = np.loadtxt(data_path, delimiter=',')
-        this_data = this_data[:self.num_points, :self.data_dim].reshape(-1)
+        this_data = this_data[:self.num_points, :self.data_dim]
 
         point_cloud = torch.tensor(this_data, dtype=torch.float32)
         label = torch.tensor(label, dtype=torch.int64)

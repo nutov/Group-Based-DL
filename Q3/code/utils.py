@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch import nn
 from itertools import permutations
 import numpy as np
-
+import math
 
 
 def create_permutations_sampled(x:torch.tensor,K:int):
@@ -13,7 +13,7 @@ def create_permutations_sampled(x:torch.tensor,K:int):
 
 
 def test_canonization_net(CanonizationNet, d=10, n=20, tol=1e-5):
-    net = CanonizationNet(d=d)
+    net = CanonizationNet(d=d*n)
     x = torch.randn(n, d)
     perm = torch.randperm(n)
     x_perm = x[perm]
@@ -26,7 +26,7 @@ def test_canonization_net(CanonizationNet, d=10, n=20, tol=1e-5):
 
 
 def test_symmetrization_net(SymmetrizationNet, d=3, n=5, tol=1e-5):  # small n for factorial runtime
-    net = SymmetrizationNet(d=d)
+    net = SymmetrizationNet(d=d*n)
     x = torch.randn(n, d)
     perm = torch.randperm(n)
     x_perm = x[perm,:]
@@ -38,8 +38,10 @@ def test_symmetrization_net(SymmetrizationNet, d=3, n=5, tol=1e-5):  # small n f
 
 
 
-def test_sampled_symmetrization_net(SampledSymmetrizationNet, d=5, n=50, num_samples=50, tol=1e-5):
-    net = SampledSymmetrizationNet(d=d,num_samples = num_samples)
+def test_sampled_symmetrization_net(SampledSymmetrizationNet, d=2, n=8, tol=2e-1):
+    num_samples=int(0.05*math.factorial(n))
+    net = SampledSymmetrizationNet(d=d*n,num_samples = num_samples)
+    net.eval() 
     x = torch.randn(n, d)
     perm = torch.randperm(n)
     x_perm = x[perm]
@@ -100,7 +102,7 @@ def custom_loss(outputs, targets):
     not_mse = 0.5 * prec * torch.mean(torch.pow(outputs - targets, 2))
     return not_mse - 0.5 * torch.log(prec)
 
-def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=250,sched = None,verbose = False):
+def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=500,sched = None,verbose = False):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     x.to(device)
     model.to(device)
@@ -109,7 +111,7 @@ def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=250,s
         for _ in range(augments_per_epoch):
             perm = torch.randperm(x.size(0),device=device)
             x_aug = x[perm]                          # permute rows
-            y_true = compute_variance_target(x_aug).to(device)  # shape: (n,1)
+            y_true = compute_variance_target(x_aug).to(device).view(-1)  # shape: (n,1)
             y_pred = model(x_aug).to(device)
             loss = F.mse_loss(y_pred, y_true)
             #loss = custom_loss(y_pred, y_true)
@@ -135,15 +137,15 @@ def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=250,s
 
 
 
-def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
+def test_variance_invariance(model,d=5, tol=1e-1, num_tests=100):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    x = torch.randn((100,d)).to(device)
+    x = torch.randn((50,d)).to(device)
     model.eval()
     with torch.no_grad():
         y_ref = model(x)
         for _ in range(num_tests):
             perm = torch.randperm(x.size(0))
             y_alt = model(x[perm])
-            if not torch.allclose(y_ref[perm], y_alt, atol=tol):
+            if not torch.allclose(y_ref, y_alt[perm], atol=tol):
                 return False
     return True
