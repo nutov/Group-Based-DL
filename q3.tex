@@ -9,6 +9,13 @@
 \usepackage{geometry}
 \usepackage{enumitem}
 \usepackage{pifont}
+\usepackage{listings}
+\usepackage{xcolor}          % for custom colours (optional)
+
+\definecolor{codegray}{gray}{0.45}
+\definecolor{codebg}{RGB}{250,250,248}
+
+
 \geometry{margin=2.7cm}
 
 % ---------- shortcuts -------------------------------------------------------
@@ -118,5 +125,109 @@
 	tolerance, We intentionally kept a looser threshold here to reveal the \emph{trend}
 	toward invariance and to assess given our time and computation resources how far each model has progressed toward full
 	invariance.
+	\subsection{Networks: theory \& implementation details}
+	\begin{enumerate}[label=(\alph*),wide,labelindent=0pt]
+		
+		%------------------------------------------------------------------------
+		\item \textbf{Canonisation Net}
+
+		\textit{Theory.}  
+		A canoniser \(g\) assigns every permutation orbit to a single representative.
+		We have
+		$f(g(x)x) = f(g(y)y)$ whenever $x$ and $y$ are in the same orbit thereby proving exact permutation invariance.
+
+		\textit{Implementation.}  
+		We define the Canonization function \(g\) by sorting the rows according to \emph{descending} Euclidean‑norm order (computed over the feature
+		dimension) with PyTorch sort
+		(\texttt{idx = x.norm(dim=1).sort(descending=True).indices}).  
+		After re‑ordering we apply a row encoder
+		\texttt{Linear(d,64) → ReLU → Linear(64,64)}
+		and feed it into the head \texttt{Linear(64,d\_out)}.
+		
+		%------------------------------------------------------------------------
+		\item \textbf{Full symmetrisation}
+		
+		\textit{Theory.}  
+		The average
+		\(\bar f(X)=|S_N|^{-1}\sum_{P\in S_N} f (PX) \) is analytically invariant.
+		
+		\textit{Implementation.}  
+		For \(N\! = \!6\) we enumerate all permutations with
+		\texttt{itertools.permutations}.  
+		Each permuted set passes through the same MLP
+		(\texttt{Linear → ReLU → mean}), the results are accumulated and divided by \(N!\).
+		
+		%------------------------------------------------------------------------
+		\item \textbf{Sampled symmetrisation}
+		
+		\textit{Theory.}  
+		We approximate the group average with
+		\(\hat f_K(X)=K^{-1}\sum_{k=1}^K f(P_kX)\), where \(P_k\) are i.i.d. uniform
+		permutations.
+		
+		\textit{Implementation.}  
+		We sample \(K=0.05 \cdot N!\) ,$(N=8)$ permutations  with
+		\texttt{torch.randperm(N)}.  
+		Inside the loop we apply the row MLP, \emph{mean‑pool}, and accumulate into a
+		vector of shape \((d_{\text{out}},)\).  
+		Finally we divide by \(K\).
+		
+		%------------------------------------------------------------------------
+		\item \textbf{Linear \(S_N\)‑equivariant network}
+		
+		\textit{Theory.}  
+		Every \emph{permutation‑equivariant} linear map
+		acting on an \(N\times d_{\text{in}}\) tensor (see Lec.\;10)
+		must have the following form
+		\[ \label{eq:equivariance}
+		(\Phi X)_i \;=\;
+		X W_1 \;+\;
+		\boldmath{1} \boldmath{1}^T X W_2  .
+		\]
+		Stacking such \(\Phi\)’s with preserves equivariance; a final
+		row‑sum makes the overall map invariant.
+		
+		\textit{Implementation.}  
+		The layer below realises Eq.\eqref{eq:equivariance}
+		\begin{lstlisting}[language=Python,basicstyle=\ttfamily\small,
+			caption={Equivariant layer in PyTorch}]
+			class Linear_eq_layer(nn.Module):
+			def __init__(self, d_in=10, d_hidden=32):
+			super().__init__()
+			self.w1 = nn.Linear(d_in,d_hidden)
+			self.w2 = nn.Linear(d_in,d_hidden)
+			
+			
+			def forward(self, x):  # x is (n, d_in)
+			return self.w1(x) + self.w2(torch.unsqueeze(torch.sum(x,dim=0),dim=0))
+		\end{lstlisting}
+		\emph{Equivariance test.}  
+		property was verified separately.\\
+		Followed by two such layers,
+		ReLU activations, row‑sum pooling, and a head \texttt{Linear(d\_h,d\_out)}.
+		\begin{lstlisting}[language=Python,basicstyle=\ttfamily\small,
+			caption={Stacked equivariant layers in PyTorch}]
+			class Linear_eq_Net(nn.Module):
+			def __init__(self, d_in=10, d_hidden=32 , d_out = 4):
+			super().__init__()
+			self.equiv = nn.Sequential(Linear_eq_layer(d_in,d_hidden),
+			nn.ReLU(),
+			Linear_eq_layer(d_hidden,d_hidden)
+			)
+			
+			self.post_pool = nn.Sequential(
+			nn.ReLU(),
+			nn.Linear(d_hidden, d_out))
+			
+			
+			def forward(self, x):  # x is (n, d_in)
+			x_eq = self.equiv(x)
+			x_pool = x_eq.sum(dim=0)
+			return self.post_pool(x_pool)
+		\end{lstlisting}
+	
+		
+		
+	\end{enumerate}
 	
 \end{document}
