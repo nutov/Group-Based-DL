@@ -11,12 +11,11 @@ def main():
     # preprocess_data()  #TODO
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    # You should specify the absolute path to the data in config.json!!!
+    # Read data
     absolute_path_to_data = get_data_path()
     cloud_data = data.PointCloudDataset(absolute_path_to_data)
     pcd = cloud_data.sample_Pcd_per_category(cloud_data.categories[0],1,num_samples=256)[0]
     plot_pcd(pcd)
-
 
     num_test = 100
 
