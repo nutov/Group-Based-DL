@@ -95,14 +95,14 @@ def run_test(test_args:tuple,num_tests = 100):
 
 
 def compute_variance_target(x):
-    return torch.unsqueeze(x.var(dim=1, unbiased=True),dim=1)
+    return torch.unsqueeze(x.var(dim=0, unbiased=True),dim=1)
 
 def custom_loss(outputs, targets):
     prec = 1 / torch.var(outputs)
     not_mse = 0.5 * prec * torch.mean(torch.pow(outputs - targets, 2))
     return not_mse - 0.5 * torch.log(prec)
 
-def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=500,sched = None,verbose = False):
+def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=550,sched = None,verbose = False):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     x.to(device)
     model.to(device)
@@ -137,7 +137,7 @@ def train_variance_net(model, optimizer, x, epochs=100, augments_per_epoch=500,s
 
 
 
-def test_variance_invariance(model,d=5, tol=1e-1, num_tests=100):
+def test_variance_invariance(model,d=5, tol=5e-2, num_tests=100):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     x = torch.randn((50,d)).to(device)
     model.eval()
@@ -146,6 +146,6 @@ def test_variance_invariance(model,d=5, tol=1e-1, num_tests=100):
         for _ in range(num_tests):
             perm = torch.randperm(x.size(0))
             y_alt = model(x[perm])
-            if not torch.allclose(y_ref, y_alt[perm], atol=tol):
+            if not torch.allclose(y_ref, y_alt, atol=tol):
                 return False
     return True

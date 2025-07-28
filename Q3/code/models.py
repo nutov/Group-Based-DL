@@ -106,7 +106,7 @@ class AugmentedInvariantNet(nn.Module):
         self.net = nn.Sequential(nn.Flatten(0),
             nn.Linear(d , d_hidden),  
             nn.ReLU(),
-            nn.Linear(d_hidden, 50)
+            nn.Linear(d_hidden, 5)
         )
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
     def forward(self, x):
