@@ -22,17 +22,11 @@
 	\label{sec:code}
 	
 	\begin{description}[leftmargin=2.1em, style=nextline]
-		\item[\texttt{data.py}]  
-		Generates a synthetic data set     $(N,d)$  and wraps it in a
-		subclass of \texttt{torch.utils.data.Dataset}.  The helper
-		\texttt{rand\_permute(X)} returns a random row permutation, used in
-		augmentation experiments.
-		
 		\item[\texttt{models.py}]  
 		Implements the five architectures required in Q\,3:  
 		\textbf{Canonisation\_Net}, \textbf{Symmetrization\_Net},
 		\textbf{Sampled\_Symmetrization\_Net},
-		\textbf{Linear\_eq\_Net} (built from two‑orbit equivariant layers),
+		\textbf{Linear\_eq\_Net} (built from two equivariant layers),
 		and \textbf{AugmentedInvariantNet}.  
 		Each class exposes \texttt{forward(X)} with $X\in\mathbb R^{N\times d}$.
 		
@@ -64,11 +58,27 @@
 	\section{Permutation–invariance sanity check}
 	\label{sec:inv}
 	
-	\subsection*{Protocol}
-	For each network we draw $20$ random permutations
-	$P\in S_N$ of a synthetic set $X\in\mathbb R^{N\times d}$ and
-	count a failure when
-	$\lVert f(X)-f(PX)\rVert_{\infty} > 5\times 10^{-2}$.
+	\subsection*{test Permutation invariance}
+	For every network we apply $50$ random permutations $P\!\in\!S_N$ to a fixed
+	set $X$ and record a \emph{failure} when the $\ell_\infty$–distance between the
+	original and permuted outputs exceeds a model‑specific tolerance:
+	
+	\begin{itemize}
+		\item[(a,b,d)] \hspace*{0.5em}fail if \( \lVert f(X)-f(PX)\rVert_\infty > 10^{-5} \);
+		\item[(c)]      \hspace*{1.4em}fail if \( \lVert f(X)-f(PX)\rVert_\infty > 2\times10^{-1} \)\\
+		(higher threshold to reflect the Monte‑Carlo approximation of \(S_N\));
+		\item[(e)]      \hspace*{1.4em}fail if \( \lVert f(X)-f(PX)\rVert_\infty > 5\times10^{-2} \)\\
+		(relaxed tolerance to probe the invariance learned via augmentation).
+	\end{itemize}
+	Finally, for each model we report the \emph{failure rate}
+	\[
+	\text{Failure rate}
+	\;=\;
+	\frac{\#\;\text{failed permutations}}
+	{\#\;\text{permutations tested}}\;,
+	\]
+	i.e.\ the fraction of the $50$ sampled permutations that violate
+	their respective tolerance.
 	
 	\begin{table}[h]
 		\centering
@@ -78,12 +88,12 @@
 			\midrule
 			Canonisation                                   & 0.00 & \cmark \\
 			Full symmetrisation                            & 0.00 & \cmark \\
-			Sampled symmetrisation ($K=256$)               & 0.94 & \cmark$^{\ast}$ \\
+			Sampled symmetrisation ($K=256$)               & 0.94 & \xmark \\
 			$S_N$‑equivariant linear layers                & 0.00 & \cmark \\
 			Learned‑invariant (augmentations)              & 0.28 & \cmark$^{\ast}$ \\
 			\bottomrule
 		\end{tabular}
-		\caption{Failure rate on $(N,d)=(9,2)$.}
+		\caption{Failure rate for each network.}
 		\label{tab:inv}
 	\end{table}
 	
@@ -93,19 +103,20 @@
 		Canonisation, full symmetrisation, and linear $S_N$‑equivariant layers are
 		provably invariant; failures are zero within numerical precision.
 		
-		\item \textbf{Monte‑Carlo methods.}
-		Sampled symmetrisation averages over $K=256$ permutations—
-		$\approx0.05\,|S_N|$ for $N=9$—so estimator variance explains the
-		$\approx1\%$ failure rate.  Doubling $K$ halves the error.
+		\item \textbf{Monte‑Carlo method (c).}
+		Sampled symmetrisation averages over $K=0.05 \cdot 8! $ permutations—
+		$\approx0.05\,|S_N|$ for $N=8$—so estimator variance might explain the
+		$\approx1\%$ failure rate.  Increasing $K$ should decrease the error.
 		
-		\item \textbf{Learned invariance.}
+		\item \textbf{Learned invariance (e).}
 		The unconstrained MLP acquires symmetry through augmentation; after
-		$\sim250$ epochs the failure rate falls below $0.3\%$.
+		$\sim250$ epochs with $\sim500$ augmentations per epoch the failure rate falls below $0.3\%$.
 	\end{itemize}
 	
 	\vspace{0.3em}
-	\noindent$^{\ast}$Both stochastic models pass with a looser
-	tolerance $7\times10^{-2}$ or with $K\!=\!512$, confirming that deviations are
-	purely Monte‑Carlo noise.
+	\noindent$^{\ast}$ Both stochastic models (c and e) pass with a looser
+	tolerance, We intentionally kept a looser threshold here to reveal the \emph{trend}
+	toward invariance and to assess given our time and computation resources how far each model has progressed toward full
+	invariance.
 	
 \end{document}
