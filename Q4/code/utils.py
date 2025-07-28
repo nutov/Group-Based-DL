@@ -1,10 +1,6 @@
 import torch
 import torch.nn.functional as F
-from torch import nn
-from itertools import permutations
 import numpy as np
-
-
 
 def create_permutations_sampled(x:torch.tensor,K:int):
     N,_ = x.size()
@@ -34,7 +30,6 @@ def test_symmetrization_net(SymmetrizationNet, d=3, n=5, tol=1e-5):  # small n f
     y_perm = net(x_perm)
     
     return torch.allclose(y, y_perm, atol=tol)
-
 
 
 def test_sampled_symmetrization_net(SampledSymmetrizationNet, d=5, n=50, num_samples=50, tol=1e-5):
@@ -107,34 +102,62 @@ def _basic_training(model,optimizer,target,data):
     loss = F.binary_cross_entropy(out,target)
     loss.backward()
     optimizer.step()
+    return loss.item()
 
 def _augmentation_f(data):
     raise NotImplemented
     return data  #TODO
 
-def train_model(model, optimizer,train_loader, test_loader=None, epochs=100, augments_per_epoch=250,verbose = False,augmentation = False):
+def train_model(model, optimizer, train_loader, test_loader=None, epochs=100, augments_per_epoch=250, verbose=False, augmentation=False):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
+    train_losses = []
+    test_losses = []
     for epoch in range(epochs):
         model.train()
-        for (data,target) in train_loader:
+        running_loss = 0.0
+        num_batches = 0
+        for data, target in train_loader:
+            data, target = data.to(device), target.to(device)
             if not augmentation:
-                _basic_training(model,optimizer,target,data)
+                loss = _basic_training(model, optimizer, target, data)
+                running_loss += loss
+                num_batches += 1
             else:
                 for _ in range(augments_per_epoch):
-                    _basic_training(model,optimizer,target,_augmentation_f(data))
+                    aug_data = _augmentation_f(data)
+                    loss = _basic_training(model, optimizer, target, aug_data)
+                    running_loss += loss
+                    num_batches += 1
+        avg_train_loss = running_loss / max(1, num_batches)
+        train_losses.append(avg_train_loss)
 
+        # Evaluate on test set if provided
+        avg_test_loss = None
         if test_loader is not None:
             model.eval()
+            test_loss = 0.0
+            test_batches = 0
             with torch.no_grad():
-                for data,target in test_loader:
+                for data, target in test_loader:
+                    data, target = data.to(device), target.to(device)
                     out = model(data)
-
-    return model
-    
-
-
-
+                    loss = F.binary_cross_entropy(out, target)
+                    test_loss += loss.item()
+                    test_batches += 1
+            avg_test_loss = test_loss / max(1, test_batches)
+            test_losses.append(avg_test_loss)
+        if verbose:
+            if avg_test_loss is not None:
+                print(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f} | Test Loss: {avg_test_loss:.4f}")
+            else:
+                print(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f}")
+    # Optionally return statistics
+    stats = {
+        'train_losses': train_losses,
+        'test_losses': test_losses if test_loader is not None else None
+    }
+    return model, stats
 
 
 def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
@@ -149,3 +172,4 @@ def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
             if not torch.allclose(y_ref[perm], y_alt, atol=tol):
                 return False
     return True
+

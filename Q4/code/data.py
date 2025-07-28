@@ -1,9 +1,65 @@
+import json
 import os
 import os.path as osp
+from os import path as osp
+
 import numpy as np
 from pathlib import Path
 from torch.utils.data import Dataset
 import torch
+
+def get_data_path():
+    config_path = osp.join(osp.dirname(__file__), 'config.json')
+    example_path = osp.join(osp.dirname(__file__), 'config.example.json')
+    if osp.exists(config_path):
+        with open(config_path) as f:
+            return json.load(f)["data_path"]
+    else:
+        with open(example_path) as f:
+            return json.load(f)["data_path"]
+
+data_dir = get_data_path()
+
+
+class modelnet_dataset(Dataset):
+    def __init__(self, test_or_train, num_points=256, data_dim=3):
+        """
+        :param test_or_train:
+        :param num_points:
+        :param data_dim:
+        """
+        self.base_path = get_data_path()
+        self.relative_datapath_list = relative_datapath_list
+        self.num_points = num_points
+        self.data_dim = data_dim
+        self.test_data_list = self._get_test_data_list()
+        pass
+
+    def _filename_composition(self, filename: str):
+        """The filename is composed of category_4d"""
+        category = filename.split('_')[0]
+        absolute_path = osp.join(data_dir, category, filename)
+        return category, absolute_path
+
+    def _get_test_data_list(self):
+        # read the modelnet40_test/train.txt file
+        test_file_path = osp.join(self.base_path, self.relative_datapath_list)
+        with open(test_file_path, 'r') as f:
+            test_data = [line.strip() for line in f.readlines()]
+
+        return test_data
+
+    def __len__(self):
+        return len(self.test_data_list)
+
+    def __getitem__(self, idx):
+        filename = self.test_data_list[idx]
+        category, absolute_path = self._filename_composition(filename)
+        data = np.loadtxt(absolute_path, delimiter=',')
+        data = data[:self.num_points, :self.data_dim]
+
+
+
 
 class PointCloudDataset(Dataset):
     def __init__(self, path_to_data, num_points=256, data_dim = 3, transform=None):
@@ -21,6 +77,8 @@ class PointCloudDataset(Dataset):
 
 
     def _get_categories(self) -> list:
+        #  TODO: change to use modelnet40_test.txt
+
         dirs = os.listdir(self.base_path)
         categories = \
             [f for f in dirs if osp.isdir(osp.join(self.base_path, f)) and not f.startswith(".")]
@@ -59,5 +117,6 @@ class PointCloudDataset(Dataset):
             file_path =  osp.join(self.base_path, category, files[idx])
             pcd.append(np.loadtxt(file_path,delimiter=',')[:num_samples][:,:3])
         return pcd
-    
-    
+
+
+
