@@ -1,3 +1,5 @@
 {
-    "data_path": "Put the absolute path to the data here. For example '/absolute/path/to/modelnet40_normal_resampled'."
+    "data_path": "Put the absolute path to the data here. For example '/absolute/path/to/modelnet40_normal_resampled'.",
+    "train_data_preprocessed": false,
+    "test_data_preprocessed": false
 }

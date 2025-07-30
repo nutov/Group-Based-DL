@@ -1,22 +1,11 @@
 import json
 import os
 import os.path as osp
-from os import path as osp
 
 import numpy as np
-from pathlib import Path
 from torch.utils.data import Dataset
 import torch
 
-def get_data_path():
-    config_path = osp.join(osp.dirname(__file__), 'config.json')
-    example_path = osp.join(osp.dirname(__file__), 'config.example.json')
-    if osp.exists(config_path):
-        with open(config_path) as f:
-            return json.load(f)["data_path"]
-    else:
-        with open(example_path) as f:
-            return json.load(f)["data_path"]
 
 
 class base_dataset(Dataset):
@@ -27,16 +16,15 @@ class base_dataset(Dataset):
         :param data_dim:  dimension of data specified to be used in the dataset (there is 6 in total - 3 for point and 3 normal)
         """
 
-        self.base_path = get_data_path()
+        self.base_path = base_dataset._get_data_path()
         self.labels = self._get_labels()  # dictionary {label-name: label-number}
-        self.filelist_path = self._get_filelist_relative_name()
-        self.filenames = self._get_filenames(test_or_train)  # list of all filenames
+        self.test_or_train = test_or_train  # "test" or "train"
+        self.filenames = self._get_filenames()  # list of all filenames
 
         self.num_points = num_points
         self.data_dim = data_dim
 
-        self.preprocess_success = False
-        self.preprocess_data()
+        self.preprocess_success = self.preprocess_data()
 
 
     @staticmethod
@@ -58,12 +46,8 @@ class base_dataset(Dataset):
         return {label: i for i, label in enumerate(lines)}
 
 
-    def _get_filelist_relative_name(self) -> str:
-        raise NotImplementedError("This method should be implemented in subclasses")
-
-
-    def _get_filenames(self, files_relative_name: str):
-        file_path = os.path.join(self.base_path, files_relative_name)
+    def _get_filenames(self):
+        file_path = os.path.join(self.base_path, f"modelnet40_{self.test_or_train}.txt")
         return self._read_lines(file_path)
 
 
@@ -74,10 +58,24 @@ class base_dataset(Dataset):
         Then, we save (Mdata[:self.num_points, :self.data_dim] - Mmean[None, :]) / Mmax[None, :] to the file with the same name and prefix "processed_".
         If the preprocessing is successful, we set return True, otherwise False.
         """
+        # check if the data is already preprocessed
+        key = f"{self.test_or_train}_data_preprocessed"
+        if base_dataset._get_config_value(key):
+            return True
+
         for filename in self.filenames:
             label_name, absolute_path = self._absolute_path(filename)
-            input_data = np.load(absolute_path)
+            input_data = np.loadtxt(absolute_path, delimiter=',', dtype=np.float32)  # shape[N, 6]
+            Mmean = np.mean(input_data, axis=0)[:self.data_dim]  # [data_dim]
+            input_data = input_data[:, :self.data_dim] - Mmean[None, :]  # [N, data_dim]
+            Mmax = np.max(np.abs(input_data), axis=0)[:self.data_dim]  # [data_dim]
+            assert np.any(Mmax > 0), f"Max value for {label_name} is zero, cannot normalize data."
+            input_data = input_data[:self.num_points, :] / Mmax[None, :]
+            processed_path = osp.join(self.base_path, label_name, 'processed_' + filename + '.txt')
+            np.savetxt(processed_path, input_data, delimiter=',', fmt='%.6f')
 
+        base_dataset._set_config_value(key, True)
+        return True
 
     def _absolute_path(self, filename: str):
         """The filename is composed of category_4d"""
@@ -101,73 +99,38 @@ class base_dataset(Dataset):
 
         return input_tensor, label
 
+
+    @staticmethod
+    def _get_config_value(key):
+        config_path = osp.join(osp.dirname(__file__), 'config.json')
+        with open(config_path) as f:
+            thisJson = json.load(f)
+        return thisJson[key]
+
+    @staticmethod
+    def _set_config_value(key, value):
+        config_path = osp.join(osp.dirname(__file__), 'config.json')
+        with open(config_path) as f:
+            thisJson = json.load(f)
+        thisJson[key] = value
+        with open(config_path, 'w') as f:
+            json.dump(thisJson, f, indent=4)
+
+    @staticmethod
+    def _get_data_path():
+        data_path = base_dataset._get_config_value('data_path')
+        if not osp.isdir(data_path):
+            raise FileNotFoundError(
+                f"The absolute path to the dataset <modelnet40_normal_resampled> should be specified in the config.json in  located at {osp.join(osp.dirname(__file__), 'config.json')}. "
+                f"Current value is {data_path}, but the directory does not exist.")
+        return data_path
+
+
 class TrainDataset(base_dataset):
-    def _get_filelist_relative_name(self) -> str:
-        return 'modelnet40_train.txt'
+    def __init__(self):
+        super().__init__(test_or_train='train')
+
 
 class TestDataset(base_dataset):
-    def _get_filelist_relative_name(self) -> str:
-        return 'modelnet40_test.txt'
-
-
-
-
-class PointCloudDataset(Dataset):
-    def __init__(self, path_to_data, num_points=256, data_dim = 3, transform=None):
-        
-        self.base_path = path_to_data
-        self.categories = self._get_categories()
-        self.category_to_label = self._category_to_label()  # dict
-        self.files_per_category = self._get_files_per_category()  # dict(categoryName: fileName)
-        self.all_files = self._get_all_files()
-
-        self.num_points = num_points
-        self.data_dim = data_dim
-        self.transform = transform
-
-
-
-    def _get_categories(self) -> list:
-        #  TODO: change to use modelnet40_test.txt
-
-        dirs = os.listdir(self.base_path)
-        categories = \
-            [f for f in dirs if osp.isdir(osp.join(self.base_path, f)) and not f.startswith(".")]
-        return categories
-    
-    def _category_to_label(self) -> dict:
-        """returns the {label (number): category} dictionary"""
-        return {category: i for i, category in enumerate(self.categories)}
-
-    def _get_files_per_category(self) -> dict:
-        # Returns a list of (file_path, category_index)
-        return{categ: os.listdir(osp.join(self.base_path, categ))  for categ in self.categories}
-    
-    def _get_all_files(self) -> list:
-        return [(category, f) for category, files in self.files_per_category.items() for f in files]
-
-    def __len__(self):
-        return len(self.all_files)
-
-    def __getitem__(self, idx):
-        category, file = self.all_files[idx]
-        label = self.category_to_label[category]
-        data_path = osp.join(self.base_path, category, file)
-        this_data = np.loadtxt(data_path, delimiter=',')
-        this_data = this_data[:self.num_points, :self.data_dim]
-
-        point_cloud = torch.tensor(this_data, dtype=torch.float32)
-        label = torch.tensor(label, dtype=torch.int64)
-
-        return point_cloud, label
-    
-    def sample_Pcd_per_category(self,category:str,n:int,num_samples:int = 256):
-        files = self.files_per_category[category]
-        pcd = []
-        for idx in np.random.choice(len(files),n,replace=False):
-            file_path =  osp.join(self.base_path, category, files[idx])
-            pcd.append(np.loadtxt(file_path,delimiter=',')[:num_samples][:,:3])
-        return pcd
-
-
-
+    def __init__(self):
+        super().__init__(test_or_train='test')

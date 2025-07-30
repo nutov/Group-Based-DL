@@ -1,10 +1,13 @@
-# Import necessary libraries
-import numpy as np
 import matplotlib.pyplot as plt
 
-
-def plot_pcd(pcd):
-
+def plot_pcd(pcd, fig_num=None):
+    """Plot a 3D point
+    @:param pcd: np.array shaped (N, 3) where N is the number of points
+    """
+    if fig_num is not None:
+        plt.figure(fig_num)
+    else:
+        plt.figure()
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     ax.scatter3D(pcd[:, 0], pcd[:, 1], pcd[:, 2],s=2)
     # label the axes
@@ -12,5 +15,3 @@ def plot_pcd(pcd):
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
     ax.set_title("Random Point Cloud")
-    # display:
-    plt.show()
