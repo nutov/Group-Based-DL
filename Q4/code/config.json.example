@@ -1,0 +1,8 @@
+// INSTRUCTIONS:
+// Copy this file to config.json and edit the data_path to your local absolute path.
+// Do not commit your personal config.json; it is ignored by .gitignore.
+{
+    "data_path": "<PUT YOUR ABSOLUTE DATA PATH HERE>",
+    "train_data_preprocessed": false,
+    "test_data_preprocessed": false
+}

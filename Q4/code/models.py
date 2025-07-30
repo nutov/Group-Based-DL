@@ -62,11 +62,13 @@ class SymmetrizationNet(BasePointCloudNet):
 
 class SampledSymmetrizationNet(BasePointCloudNet):
 
-    def __init__(self, n_in=256, d_in=3, d_out=40, num_samples=20):
-        super().__init__(n_in=n_in, d_in=d_in, d_out=d_out)
-        self.num_samples = num_samples
-
-    def 
+    def forward(self, x):
+        n_samples = 20
+        x = x.to(self.device)
+        res = torch.zeros((self.n_classes), device=self.device)
+        for i in range(n_samples):
+            perm = torch.randperm(self.n)
+            res += self.mlp(self.flatten(x[perm, :]))
 
 
 

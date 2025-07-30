@@ -241,4 +241,3 @@ __marimo__/
 modelnet40_normal_resampled/*
 *.zip
 Q4/modelnet40*
-*.json
