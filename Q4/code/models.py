@@ -7,6 +7,11 @@ from Q4.code.utils import *
 
 
 class BasePointCloudNet(nn.Module):
+
+    # D_HIDDEN_1, D_HIDDEN_2
+    D_HIDDEN_1 = 64
+    D_HIDDEN_2 = 128
+
     def __init__(self, n_in=256, d_in=3, d_out=40):
 
         super().__init__()
@@ -14,16 +19,16 @@ class BasePointCloudNet(nn.Module):
         self.dim = d_in  # Dimension of each point in the point cloud
         self.d_in = d_in * n_in  # Input dimension after flattening (n * d)
         self.n_classes = d_out  # Number of output classes
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.flatten = nn.Flatten()
 
         self.mlp = nn.Sequential(
-            nn.Linear(in_features=d_in * n_in, out_features=64),
+            nn.Linear(in_features=d_in * n_in, out_features=self.D_HIDDEN_1),
             nn.ReLU(),
-            nn.Linear(in_features=64, out_features=128),
+            nn.Linear(in_features=self.D_HIDDEN_1, out_features=self.D_HIDDEN_2),
             nn.ReLU(),
-            nn.Linear(in_features=128, out_features=d_out)
+            nn.Linear(in_features=self.D_HIDDEN_2, out_features=d_out)
         )
 
     def process_input(self, x):
@@ -70,14 +75,38 @@ class SampledSymmetrizationNet(BasePointCloudNet):
             perm = torch.randperm(self.n)
             res += self.mlp(self.flatten(x[perm, :]))
 
+        return res / n_samples
 
 
-class DeepSetsNet(BasePointCloudNet):
+class LinearEquivariantLayer(BasePointCloudNet):
+    def __init__(self, d_in, d_out):
+        super(BasePointCloudNet, self).__init__()
+        self.w1 = nn.Linear(d_in, d_out)
+        self.w2 = nn.Linear(d_in, d_out)
+
+    def forward(self, x):
+        # x is (n, d_in)
+        return self.w1(x) + self.w2(torch.sum(x, dim=0), dim=0)
+
+class LinearEquivariantNet(BasePointCloudNet):
     def __init__(self, n_in=256, d_in=3, d_out=40):
-        super().__init__(n_in=n_in, d_in=d_in, d_out=d_out)
-    def process_input(self, x):
-        # Permutation invariant: sum over elements
-        return x.sum(dim=0)
+        super().__init__(n_in, d_in, d_out)
+        self.mlp = nn.Sequential(
+            LinearEquivariantLayer(d_in=d_in, d_out=self.D_HIDDEN_1),
+            nn.ReLU(),
+            LinearEquivariantLayer(d_in=self.D_HIDDEN_1, d_out=self.D_HIDDEN_2),
+            nn.ReLU(),
+            nn.Linear(in_features=self.D_HIDDEN_2, out_features=self.n_classes)
+        )
+
+    def forward(self, x):
+        x = x.to(self.device)
+        x = torch.sum(x, dim=1)
+
+    def forward(self, x):
+        x = x.to(self.device)
+        x = torch.sum(x, dim=1)  # Sum over the points
+        return self.rho(x)
 
 
 class Canonization_Net(nn.Module):
@@ -186,7 +215,7 @@ class AugmentedInvariantNet(nn.Module):
             nn.ReLU(),
             nn.Linear(d_hidden, 1)
         )
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     def forward(self, x):
         #x = x.to(self.device)
         #self.net.to(self.device)
