@@ -8,7 +8,7 @@ import torch
 
 
 
-class base_dataset(Dataset):
+class BaseDataset(Dataset):
     def __init__(self, test_or_train, num_points=256, data_dim=3):
         """
         :param test_or_train: get the values "test" or "train" to load the respective dataset
@@ -16,7 +16,7 @@ class base_dataset(Dataset):
         :param data_dim:  dimension of data specified to be used in the dataset (there is 6 in total - 3 for point and 3 normal)
         """
 
-        self.base_path = base_dataset._get_data_path()
+        self.base_path = BaseDataset._get_data_path()
         self.labels = self._get_labels()  # dictionary {label-name: label-number}
         self.test_or_train = test_or_train  # "test" or "train"
         self.filenames = self._get_filenames()  # list of all filenames
@@ -60,7 +60,7 @@ class base_dataset(Dataset):
         """
         # check if the data is already preprocessed
         key = f"{self.test_or_train}_data_preprocessed"
-        if base_dataset._get_config_value(key):
+        if BaseDataset._get_config_value(key):
             return True
 
         for filename in self.filenames:
@@ -74,7 +74,7 @@ class base_dataset(Dataset):
             processed_path = osp.join(self.base_path, label_name, 'processed_' + filename + '.txt')
             np.savetxt(processed_path, input_data, delimiter=',', fmt='%.6f')
 
-        base_dataset._set_config_value(key, True)
+        BaseDataset._set_config_value(key, True)
         return True
 
     def _absolute_path(self, filename: str):
@@ -118,7 +118,7 @@ class base_dataset(Dataset):
 
     @staticmethod
     def _get_data_path():
-        data_path = base_dataset._get_config_value('data_path')
+        data_path = BaseDataset._get_config_value('data_path')
         if not osp.isdir(data_path):
             raise FileNotFoundError(
                 f"The absolute path to the dataset <modelnet40_normal_resampled> should be specified in the config.json in  located at {osp.join(osp.dirname(__file__), 'config.json')}. "
@@ -126,11 +126,11 @@ class base_dataset(Dataset):
         return data_path
 
 
-class TrainDataset(base_dataset):
+class TrainDataset(BaseDataset):
     def __init__(self):
         super().__init__(test_or_train='train')
 
 
-class TestDataset(base_dataset):
+class TestDataset(BaseDataset):
     def __init__(self):
         super().__init__(test_or_train='test')

@@ -5,18 +5,18 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from data import base_dataset, TrainDataset, TestDataset
+from data import BaseDataset, TrainDataset, TestDataset
 
 
 class TestTrainDataset(unittest.TestCase):
     def test_init(self):
         ds = TrainDataset()
-        self.assertIsInstance(ds, base_dataset)
+        self.assertIsInstance(ds, BaseDataset)
 
 class TestTestDataset(unittest.TestCase):
     def test_init(self):
         ds = TestDataset()
-        self.assertIsInstance(ds, base_dataset)
+        self.assertIsInstance(ds, BaseDataset)
 
 if __name__ == '__main__':
     unittest.main()
