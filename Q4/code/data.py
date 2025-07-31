@@ -3,6 +3,7 @@ import os
 import os.path as osp
 
 import numpy as np
+from torch.cuda import device
 from torch.utils.data import Dataset
 import torch
 
@@ -25,6 +26,7 @@ class BaseDataset(Dataset):
         self.data_dim = data_dim
 
         self.preprocess_success = self.preprocess_data()
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
     @staticmethod
@@ -92,7 +94,7 @@ class BaseDataset(Dataset):
         label_name, absolute_path = self._absolute_path(filename)
         label = torch.tensor(self.labels[label_name], dtype=torch.int64)
         input_data = np.loadtxt(absolute_path, delimiter=',')
-        input_tensor = torch.from_numpy(input_data).to(torch.float32)
+        input_tensor = torch.from_numpy(input_data).to(torch.float32, device=self.device)
 
         assert  input_tensor.shape[0] == self.num_points, f"Input data has fewer points than expected: {input_tensor.shape[0]} < {self.num_points}"
         assert input_tensor.shape[1] == self.data_dim, f"Input data has fewer dimensions than expected: {input_tensor.shape[1]} < {self.data_dim}"

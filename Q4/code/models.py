@@ -81,12 +81,15 @@ class SampledSymmetrizationNet(BasePointCloudNet):
 class LinearEquivariantLayer(BasePointCloudNet):
     def __init__(self, d_in, d_out):
         super(BasePointCloudNet, self).__init__()
+        # input dimension: [n_in, d_in]
+        # output dimension: [n_in, d_out]
         self.w1 = nn.Linear(d_in, d_out)
-        self.w2 = nn.Linear(d_in, d_out)
+        self.w2 = nn.Linear(1, d_out)
 
     def forward(self, x):
-        # x is (n, d_in)
-        return self.w1(x) + self.w2(torch.sum(x, dim=0), dim=0)
+        # x: (n, 3)
+        return self.w1(x) + self.w2(torch.sum(x, dim=0, keepdim=True))  # output: (n, d_out)
+
 
 class LinearEquivariantNet(BasePointCloudNet):
     def __init__(self, n_in=256, d_in=3, d_out=40):
