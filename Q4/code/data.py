@@ -6,8 +6,9 @@ import numpy as np
 from torch.cuda import device
 from torch.utils.data import Dataset
 import torch
+import viz
 
-
+import matplotlib.pyplot as plt
 
 class BaseDataset(Dataset):
     def __init__(self, test_or_train, num_points=256, data_dim=3):
@@ -21,10 +22,12 @@ class BaseDataset(Dataset):
         self.labels = self._get_labels()  # dictionary {label-name: label-number}
         self.test_or_train = test_or_train  # "test" or "train"
         self.filenames = self._get_filenames()  # list of all filenames
+        self.filenames_per_label = self._get_fialenames_per_label()  # dictionary {label-name: list of filenames}
 
         self.num_points = num_points
         self.data_dim = data_dim
 
+        self.preprocess_success = False
         self.preprocess_success = self.preprocess_data()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -51,6 +54,17 @@ class BaseDataset(Dataset):
     def _get_filenames(self):
         file_path = os.path.join(self.base_path, f"modelnet40_{self.test_or_train}.txt")
         return self._read_lines(file_path)
+
+
+    def _get_fialenames_per_label(self):
+        """
+        Returns a dictionary where keys are label names and values are lists of filenames for that label.
+        """
+        filenames_per_label = {label: [] for label in self.labels.keys()}
+        for filename in self.filenames:
+            label_name = self._get_label_from_filename(filename)
+            filenames_per_label[label_name].append(filename)
+        return filenames_per_label
 
 
     def preprocess_data(self):
@@ -81,9 +95,16 @@ class BaseDataset(Dataset):
 
     def _absolute_path(self, filename: str):
         """The filename is composed of category_4d"""
-        label_name = filename.split('_')[0]
-        absolute_path = osp.join(self.base_path, label_name, filename + '.txt')
+        label_name = self._get_label_from_filename(filename)
+        if self.preprocess_success:
+            absolute_path = osp.join(self.base_path, label_name, "processed_" + filename + '.txt')
+        else:
+            absolute_path = osp.join(self.base_path, label_name, filename + '.txt')
         return label_name, absolute_path
+
+    @staticmethod
+    def _get_label_from_filename(filename: str):
+        return '_'.join(filename.split('_')[:-1])
 
 
     def __len__(self):
@@ -94,9 +115,8 @@ class BaseDataset(Dataset):
         label_name, absolute_path = self._absolute_path(filename)
         label = torch.tensor(self.labels[label_name], dtype=torch.int64)
         input_data = np.loadtxt(absolute_path, delimiter=',')
-        input_tensor = torch.from_numpy(input_data).to(torch.float32, device=self.device)
-
-        assert  input_tensor.shape[0] == self.num_points, f"Input data has fewer points than expected: {input_tensor.shape[0]} < {self.num_points}"
+        input_tensor = torch.from_numpy(input_data).to(torch.float32)
+        assert input_tensor.shape[0] == self.num_points, f"Input data has fewer points than expected: {input_tensor.shape[0]} < {self.num_points}"
         assert input_tensor.shape[1] == self.data_dim, f"Input data has fewer dimensions than expected: {input_tensor.shape[1]} < {self.data_dim}"
 
         return input_tensor, label
@@ -126,6 +146,30 @@ class BaseDataset(Dataset):
                 f"The absolute path to the dataset <modelnet40_normal_resampled> should be specified in the config.json in  located at {osp.join(osp.dirname(__file__), 'config.json')}. "
                 f"Current value is {data_path}, but the directory does not exist.")
         return data_path
+
+
+    # def show_data(self, idx=None, label=None):
+    #     """
+    #     Visualize the point cloud data.
+    #     :param idx: index of the data to visualize, if None, random index is chosen
+    #     :param label: label of the data to visualize, if None, the image is taken from the entire dataset
+    #     :return: None
+    #     """
+    #     if label is not None:
+    #         if idx is None:
+    #             idx = np.random.randint(0, len(self.filenames_per_label[label]))
+    #
+    #         filename = self.filenames_per_label[label][idx]
+    #     else:
+    #         if idx is None:
+    #             idx = np.random.randint(0, len(self.filenames))
+    #         filename = self.filenames[idx]
+    #
+    #     label_name, absolute_path = self._absolute_path(filename)
+    #     res = np.loadtxt(absolute_path, delimiter=',', dtype=np.float32)  # shape[N, 6]
+    #     viz.plot_pcd(res[:, :self.data_dim])
+    #     plt.show()
+
 
 
 class TrainDataset(BaseDataset):

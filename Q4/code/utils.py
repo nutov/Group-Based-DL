@@ -1,9 +1,10 @@
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as func
 import numpy as np
+from file_manager import logger
 
 def create_permutations_sampled(x:torch.tensor,K:int):
-    N,_ = x.size()
+    N = x.size()[0]
     for _ in range(K):
         yield np.random.permutation(N)
 
@@ -95,11 +96,11 @@ def custom_loss(outputs, targets):
     return not_mse - 0.5 * torch.log(prec)
 
 
-def _basic_training(model,optimizer,target,data):
+def _basic_training(model, optimizer, target_label, in_data):
     # check that the model updates
     optimizer.zero_grad()
-    out = model(data)
-    loss = F.binary_cross_entropy(out,target)
+    output = model(in_data)
+    loss = func.cross_entropy(output, target_label)
     loss.backward()
     optimizer.step()
     return loss.item()
@@ -110,29 +111,43 @@ def _augmentation_f(data):
 
 
 def train(model, optimizer, train_loader, test_loader=None, epochs=100, augmentations=0, verbose=False, use_augmentation=False):
+    """
+    Train a model with optional data augmentation.
+    :param model:
+    :param optimizer:
+    :param train_loader:
+    :param test_loader:
+    :param epochs:
+    :param augmentations:
+    :param verbose:
+    :param use_augmentation:
+    :return:
+    model, train_losses, test_losses
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     train_losses = []
     test_losses = []
 
     for epoch in range(epochs):
+        logger.info(f"Epoch {epoch}")
         model.train()
         running_loss = 0.0
         num_batches = 0
-        for inputs, targets in train_loader:
-            inputs, targets = inputs.to(device), targets.to(device)
+        for inputs, target_labels in train_loader:
+            inputs, target_labels = inputs.to(device), target_labels.to(device)
             if use_augmentation:
                 for _ in range(augmentations):
                     aug_inputs = _augmentation_f(inputs)
-                    loss = _basic_training(model, optimizer, targets, aug_inputs)
+                    loss = _basic_training(model, optimizer, target_labels, aug_inputs)
                     running_loss += loss
                     num_batches += 1
             else:
-                loss = _basic_training(model, optimizer, targets, inputs)
+                loss = _basic_training(model, optimizer, target_labels, inputs)
                 running_loss += loss
                 num_batches += 1
         if num_batches == 0:
-            print("Warning: No batches processed in this epoch. Check your data loader.")
+            logger.info("Warning: No batches processed in this epoch. Check your data loader.")
             continue
 
         avg_train_loss = running_loss / num_batches
@@ -144,24 +159,18 @@ def train(model, optimizer, train_loader, test_loader=None, epochs=100, augmenta
             test_loss = 0.0
             test_batches = 0
             with torch.no_grad():
-                for inputs, targets in test_loader:
-                    inputs, targets = inputs.to(device), targets.to(device)
+                for inputs, target_labels in test_loader:
+                    inputs, target_labels = inputs.to(device), target_labels.to(device)
                     outputs = model(inputs)
-                    loss = F.binary_cross_entropy(outputs, targets)
+                    loss = func.cross_entropy(outputs, target_labels)
                     test_loss += loss.item()
                     test_batches += 1
             avg_test_loss = test_loss / max(1, test_batches)
             test_losses.append(avg_test_loss)
-        if verbose:
-            msg = f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.4f}"
-            if avg_test_loss is not None:
-                msg += f" | Test Loss: {avg_test_loss:.4f}"
-            print(msg)
-    stats = {
-        "train_losses": train_losses,
-        "test_losses": test_losses if test_loader is not None else None
-    }
-    return model, stats
+        logger.info(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.8f}")
+        if avg_test_loss is not None:
+            logger.info(f" | Test Loss: {avg_test_loss:.8f}")
+    return model, train_losses, test_losses
 
 def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
     device = "cuda" if torch.cuda.is_available() else "cpu"

@@ -1,18 +1,56 @@
+import numpy as np
+
 import data
 from viz import *
-from models import *
+# from models import *
+import os
+import torch
+import models
+from file_manager import SaveFig, logger, SaveData
+
 
 data_n = int(256)
 data_dim = int(3)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def main():
 
     train_dataset = data.TrainDataset()
     test_dataset = data.TestDataset()
-    plot_pcd(train_dataset.show_data(0, random=True))
+
+    # plot_pcd(train_dataset[0][0])
+    # plt.show()
+    # plot_pcd(test_dataset[0][0])
+    # plt.show()
+
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=False)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+    # train LinearEquivariantNet model
+    equivariant_model = models.LinearEquivariantNet().to(device=device)
+    optimizer = torch.optim.Adam(equivariant_model.parameters(), lr=0.005)
+    equivariant_model, train_losses, test_losses = models.train(equivariant_model, optimizer, train_dataloader, test_dataloader, epochs=200)
+    plt.figure(1)
+    plt.plot(train_losses, label='Train Loss')
+    plt.plot(test_losses, label='Test Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Training and Test Losses')
+    plt.legend()
+    SaveFig("equivariant_model_loss_plot")
     plt.show()
-    plot_pcd(test_dataset.show_data(0, random=True))
-    plt.show()
+    SaveData(train_losses, "train_losses_equivariant_model")
+    SaveData(test_losses, "test_losses_equivariant_model")
+
+
+
+
+    # # example of ploting a parabula
+    # x = np.linspace(-1, 1, 100)
+    # y = x ** 2
+    # plt.plot(x, y)
+    # plt.show()
+
 
 
     # # data preprocessing

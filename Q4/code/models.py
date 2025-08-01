@@ -1,10 +1,8 @@
 import torch
-import torch.nn.functional as F
-import math
-from sympy.polys.rootisolation import dup_outer_refine_real_root
 from torch import nn
-from Q4.code.utils import *
-
+import numpy as np
+from file_manager import DATA_DIR, logger
+import os.path as osp
 
 class BasePointCloudNet(nn.Module):
 
@@ -40,6 +38,25 @@ class BasePointCloudNet(nn.Module):
         x = self.flatten(x)
         return self.mlp(x)
 
+    def save(self, path=None):
+        """Save model by it's name"""
+        if path is not None:
+            model_name = self.__class__.__name__
+            path = osp.join(DATA_DIR, f"{model_name}.pth")
+        torch.save(self.state_dict(), path)
+        logger.info(f"Model saved to {path}")
+
+    def load(self, path=None):
+        """Load model from by it's name"""
+        if path is not None:
+            model_name = self.__class__.__name__
+            path = osp.join(DATA_DIR, f"{model_name}.pth")
+        if not osp.isfile(path):
+            raise RuntimeError(f"Model file does not exist: {path}")
+        self.load_state_dict(torch.load(path, map_location=self.device))
+        self.to(self.device)
+        logger.info(f"Model loaded from {path}")
+
 
 class CanonicalizationNet(BasePointCloudNet):
     def process_input(self, x):
@@ -61,7 +78,7 @@ class SymmetrizationNet(BasePointCloudNet):
         res = torch.zeros((self.n_classes), device=self.device)
         for perm in torch.permutations(torch.arange(self.n)):
             res += self.mlp(self.flatten(x[list(perm), :]))
-        return res / torch.tensor(math.factorial(self.n), dtype=x.dtype, device=self.device)
+        return res / np.prod(range(1, self.n+1))
 
 class SampledSymmetrizationNet(BasePointCloudNet):
 
@@ -81,11 +98,11 @@ class LinearEquivariantLayer(BasePointCloudNet):
         # input dimension: [n_in, d_in]
         # output dimension: [n_in, d_out]
         self.w1 = nn.Linear(d_in, d_out)
-        self.w2 = nn.Linear(1, d_out)
+        self.w2 = nn.Linear(d_in, d_out)
 
     def forward(self, x):
         # x: (n, 3)
-        return self.w1(x) + self.w2(torch.sum(x, dim=0, keepdim=True))  # output: (n, d_out)
+        return self.w1(x) + self.w2(torch.sum(x, dim=-2, keepdim=True))  # output: (n, d_out)
 
 
 class LinearEquivariantNet(BasePointCloudNet):
@@ -102,14 +119,8 @@ class LinearEquivariantNet(BasePointCloudNet):
         )
 
     def forward(self, x):
-        res = torch.tensor(self.equivariant_mpl(x))  # res: (n, D_HIDDEN_2)
-        res = res.mean(dim=0)  # Sum over the points  # res: (D_HIDDEN_2,)
-        res = self.invariant_mpl(res)  # res: (n_classes,)
-        return res
-
-    def forward(self, x):
-        x = torch.sum(x, dim=1)  # Sum over the points
-        return self.rho(x)
+        res = self.equivariant_mpl(x)  # res: (n, D_HIDDEN_2)
+        return self.invariant_mpl(res.mean(dim=-2))
 
 # TODO: make AugmentedInvariantNet
 # class Canonization_Net(nn.Module):

@@ -25,6 +25,11 @@ for dir_path in [RESULT_DIR, TIMERS_DIR, FIGURES_DIR, DATA_DIR]:
 
 def MakeLogger(debugMode=False):
 
+
+    # Remove all handlers associated with the root logger
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
     # Create and config logger
     global RESULT_DIR
     debug_level = logging.DEBUG if debugMode else logging.INFO
@@ -37,6 +42,7 @@ def MakeLogger(debugMode=False):
     logger.info(f"start logger")
     return logger
 
+logger = MakeLogger()
 
 def TimeIt(func):
     """Decorator that write functions' execution time to text file in TIMERS_DIR/function name.txt"""
