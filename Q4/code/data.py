@@ -7,6 +7,7 @@ from torch.cuda import device
 from torch.utils.data import Dataset
 import torch
 import viz
+from file_manager import logger
 
 import matplotlib.pyplot as plt
 
@@ -19,7 +20,7 @@ class BaseDataset(Dataset):
         """
 
         self.base_path = BaseDataset._get_data_path()
-        self.labels = self._get_labels()  # dictionary {label-name: label-number}
+        self.labels_to_numbers, self.numbers_to_labes = self._get_labels_dictionaries()  # dictionary {label-name: label-number}
         self.test_or_train = test_or_train  # "test" or "train"
         self.filenames = self._get_filenames()  # list of all filenames
         self.filenames_per_label = self._get_fialenames_per_label()  # dictionary {label-name: list of filenames}
@@ -41,14 +42,15 @@ class BaseDataset(Dataset):
         return lines
 
 
-    def _get_labels(self):
+    def _get_labels_dictionaries(self):
         """returns {label-number: label-name} dictionary
-        List of labels is in modelnet40_shape_names.txt
+        List of labels_to_numbers is in modelnet40_shape_names.txt
         each line is a label name
         """
         labels_path = osp.join(self.base_path, 'modelnet40_shape_names.txt')
         lines = self._read_lines(labels_path)
-        return {label: i for i, label in enumerate(lines)}
+        labels_to_numbers = {label: i for i, label in enumerate(lines)}
+        return labels_to_numbers, lines
 
 
     def _get_filenames(self):
@@ -60,7 +62,7 @@ class BaseDataset(Dataset):
         """
         Returns a dictionary where keys are label names and values are lists of filenames for that label.
         """
-        filenames_per_label = {label: [] for label in self.labels.keys()}
+        filenames_per_label = {label: [] for label in self.labels_to_numbers.keys()}
         for filename in self.filenames:
             label_name = self._get_label_from_filename(filename)
             filenames_per_label[label_name].append(filename)
@@ -84,11 +86,13 @@ class BaseDataset(Dataset):
             input_data = np.loadtxt(absolute_path, delimiter=',', dtype=np.float32)  # shape[N, 6]
             Mmean = np.mean(input_data, axis=0)[:self.data_dim]  # [data_dim]
             input_data = input_data[:, :self.data_dim] - Mmean[None, :]  # [N, data_dim]
-            Mmax = np.max(np.abs(input_data), axis=0)[:self.data_dim]  # [data_dim]
+            Mmax = np.max(np.abs(input_data), axis=0) # [data_dim]
             assert np.any(Mmax > 0), f"Max value for {label_name} is zero, cannot normalize data."
-            input_data = input_data[:self.num_points, :] / Mmax[None, :]
+            input_data = input_data / Mmax[None, :]
             processed_path = osp.join(self.base_path, label_name, 'processed_' + filename + '.txt')
-            np.savetxt(processed_path, input_data, delimiter=',', fmt='%.6f')
+            processed_shortened_path = osp.join(self.base_path, label_name, 'processed_shortened_' + filename + '.txt')
+            np.savetxt(processed_path, input_data, delimiter=',', fmt='%.8f')
+            np.savetxt(processed_shortened_path, input_data[:self.num_points, :], delimiter=',', fmt='%.8f')
 
         BaseDataset._set_config_value(key, True)
         return True
@@ -113,11 +117,11 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx):
         filename = self.filenames[idx]
         label_name, absolute_path = self._absolute_path(filename)
-        label = torch.tensor(self.labels[label_name], dtype=torch.int64)
+        label = torch.tensor(self.labels_to_numbers[label_name], dtype=torch.int64)
         input_data = np.loadtxt(absolute_path, delimiter=',')
         input_tensor = torch.from_numpy(input_data).to(torch.float32)
-        assert input_tensor.shape[0] == self.num_points, f"Input data has fewer points than expected: {input_tensor.shape[0]} < {self.num_points}"
-        assert input_tensor.shape[1] == self.data_dim, f"Input data has fewer dimensions than expected: {input_tensor.shape[1]} < {self.data_dim}"
+        # assert input_tensor.shape[0] == self.num_points, f"Input data has fewer points than expected: {input_tensor.shape[0]} < {self.num_points}"
+        # assert input_tensor.shape[1] == self.data_dim, f"Input data has fewer dimensions than expected: {input_tensor.shape[1]} < {self.data_dim}"
 
         return input_tensor, label
 

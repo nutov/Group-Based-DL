@@ -3,6 +3,7 @@ from torch import nn
 import numpy as np
 from file_manager import DATA_DIR, logger
 import os.path as osp
+import torch.nn.functional as func
 
 class BasePointCloudNet(nn.Module):
 
@@ -18,7 +19,7 @@ class BasePointCloudNet(nn.Module):
         self.d_in = d_in * n_in  # Input dimension after flattening (n * d)
         self.n_classes = d_out  # Number of output classes
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+        self.execution_phase = False
         self.flatten = nn.Flatten()
 
         self.mlp = nn.Sequential(
@@ -29,6 +30,8 @@ class BasePointCloudNet(nn.Module):
             nn.Linear(in_features=self.D_HIDDEN_2, out_features=d_out)
         )
 
+        self.to(self.device)
+
     def process_input(self, x):
         # Default: no permutation handling
         return x
@@ -36,11 +39,13 @@ class BasePointCloudNet(nn.Module):
     def forward(self, x):
         x = self.process_input(x)
         x = self.flatten(x)
+        if self.execution_phase:
+            return func.softmax(self.mlp(x), dim=-1)  # Apply softmax to the output
         return self.mlp(x)
 
     def save(self, path=None):
         """Save model by it's name"""
-        if path is not None:
+        if path is None:
             model_name = self.__class__.__name__
             path = osp.join(DATA_DIR, f"{model_name}.pth")
         torch.save(self.state_dict(), path)
@@ -48,14 +53,16 @@ class BasePointCloudNet(nn.Module):
 
     def load(self, path=None):
         """Load model from by it's name"""
-        if path is not None:
+        if path is None:
             model_name = self.__class__.__name__
             path = osp.join(DATA_DIR, f"{model_name}.pth")
         if not osp.isfile(path):
             raise RuntimeError(f"Model file does not exist: {path}")
-        self.load_state_dict(torch.load(path, map_location=self.device))
+        state_dict = torch.load(path, map_location=self.device, weights_only=True)
+        self.load_state_dict(state_dict)
         self.to(self.device)
         logger.info(f"Model loaded from {path}")
+        self.execution_phase = True
 
 
 class CanonicalizationNet(BasePointCloudNet):
@@ -93,7 +100,7 @@ class SampledSymmetrizationNet(BasePointCloudNet):
 
 
 class LinearEquivariantLayer(BasePointCloudNet):
-    def __init__(self, d_in, d_out):
+    def __init__(self, d_in=3, d_out=40):
         super(BasePointCloudNet, self).__init__()
         # input dimension: [n_in, d_in]
         # output dimension: [n_in, d_out]
@@ -106,8 +113,9 @@ class LinearEquivariantLayer(BasePointCloudNet):
 
 
 class LinearEquivariantNet(BasePointCloudNet):
-    def __init__(self, n_in=256, d_in=3, d_out=40):
+    def __init__(self, n_in=256, d_in=3, d_out=40, pooling='mean'):
         super().__init__(n_in, d_in, d_out)
+        self.pooling = pooling
         self.equivariant_mpl = nn.Sequential(
             LinearEquivariantLayer(d_in=d_in, d_out=self.D_HIDDEN_1),
             nn.ReLU(),
@@ -117,10 +125,44 @@ class LinearEquivariantNet(BasePointCloudNet):
         self.invariant_mpl = nn.Sequential(
             nn.Linear(in_features=self.D_HIDDEN_2, out_features=self.n_classes)
         )
+        self.residual = True
+        self._init_weights()
+
+        # put the model on the device
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.to(self.device)
+
+    def _init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+    def process_input(self, x):
+        # x shape: [*, n, d]
+        if x.shape[-2] > 1000:
+            # take only the first 1000 points
+            x = x[..., :1000, :]
+            return x
+
 
     def forward(self, x):
-        res = self.equivariant_mpl(x)  # res: (n, D_HIDDEN_2)
-        return self.invariant_mpl(res.mean(dim=-2))
+        x = self.process_input(x)
+        res_equivariant = self.equivariant_mpl(x)  # res: (n, D_HIDDEN_2)
+        # Pooling
+        if self.pooling == 'mean':
+            pooled = res_equivariant.mean(dim=-2)
+        elif self.pooling == 'sum':
+            pooled = res_equivariant.sum(dim=-2)
+        elif self.pooling == 'max':
+            pooled, _ = res_equivariant.max(dim=-2)
+        else:
+            pooled = res_equivariant.mean(dim=-2)
+        if self.execution_phase:
+            return func.softmax(self.invariant_mpl(pooled), dim=-1)
+        else:
+            return self.invariant_mpl(pooled)
 
 # TODO: make AugmentedInvariantNet
 # class Canonization_Net(nn.Module):

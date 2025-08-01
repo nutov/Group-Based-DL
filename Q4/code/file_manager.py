@@ -26,12 +26,14 @@ for dir_path in [RESULT_DIR, TIMERS_DIR, FIGURES_DIR, DATA_DIR]:
 def MakeLogger(debugMode=False):
 
 
-    # Remove all handlers associated with the root logger
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
 
     # Create and config logger
     global RESULT_DIR
+    logger_path = osp.join(RESULT_DIR, 'logger.log')
+    if osp.isfile(logger_path):
+        # delete the file if it exists
+        os.remove(logger_path)
+
     debug_level = logging.DEBUG if debugMode else logging.INFO
     LOG_FORMAT = "%(levelname)s: %(asctime)s  %(message)s"
     logging.basicConfig(filename=osp.join(RESULT_DIR, 'logger.log'),

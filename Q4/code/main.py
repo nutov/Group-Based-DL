@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 import data
@@ -7,6 +8,10 @@ import os
 import torch
 import models
 from file_manager import SaveFig, logger, SaveData
+import utils
+from make_plots import plot_object_and_scores
+
+TRAIN_FLAG = False
 
 
 data_n = int(256)
@@ -23,24 +28,74 @@ def main():
     # plot_pcd(test_dataset[0][0])
     # plt.show()
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=False)
-    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=False)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True, num_workers=4)
 
     # train LinearEquivariantNet model
     equivariant_model = models.LinearEquivariantNet().to(device=device)
-    optimizer = torch.optim.Adam(equivariant_model.parameters(), lr=0.005)
-    equivariant_model, train_losses, test_losses = models.train(equivariant_model, optimizer, train_dataloader, test_dataloader, epochs=200)
-    plt.figure(1)
-    plt.plot(train_losses, label='Train Loss')
-    plt.plot(test_losses, label='Test Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.title('Training and Test Losses')
-    plt.legend()
-    SaveFig("equivariant_model_loss_plot")
+
+    if TRAIN_FLAG:
+        optimizer = torch.optim.Adam(equivariant_model.parameters(), lr=0.001)
+        equivariant_model, train_losses, test_losses = utils.train(equivariant_model, optimizer, train_dataloader, test_dataloader, epochs=10)
+        plt.figure(1)
+        plt.semilogy(np.array(train_losses) + 1e-13, label='Train Loss')
+        plt.semilogy(np.array(test_losses) + 1e-13, label='Test Loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.title('Loss per Epoch')
+        plt.legend()
+        SaveFig("equivariant_model_loss_plot")
+        plt.show()
+        SaveData(train_losses, "train_losses_equivariant_model")
+        SaveData(test_losses, "test_losses_equivariant_model")
+        equivariant_model.save()
+    else:
+        equivariant_model.load()
+        equivariant_model.eval()
+        # test invariance to permutations
+        first_input = train_dataset[0][0]
+        for i in range(10):
+            utils.test_equivariance_equivariant_layer(equivariant_model, first_input)
+
+
+    # check results for different inputs
+    output_per_label = []
+    for label in train_dataset.numbers_to_labes:
+        # get index of the first point cloud with this label
+        filename = train_dataset.filenames_per_label[label][0]
+        inx = train_dataset.filenames.index(filename)
+        input_data, true_label = train_dataset[inx]
+        plot_object_and_scores(train_dataset, equivariant_model, inx=inx)
+        SaveFig(filename)
+        plt.close()
+        output_data = equivariant_model(input_data).detach().to("cpu").numpy()
+        output_per_label.append(output_data)
+
+    # check if the output_data is different for each input data and the Forbinius norm for each pair of outputs
+    n = len(output_data)
+    distances = np.zeros((n, n))
+    for i in range(len(output_per_label)):
+        for j in range(i+1, len(output_per_label)):
+            distances[i, j] = np.linalg.norm(output_per_label[i] - output_per_label[j])
+            distances[j, i] = distances[i, j]
+
+    # print the distance matrix logger and specify the format to be 3 decimal places
+    logger.info("Distance matrix between outputs for different labels:")
+    for row in distances:
+        logger.info(" ".join(f"{val:.3f}" for val in row))
+
+
+
+
+
+
+    plot_object_and_scores(train_dataset, equivariant_model)
+    SaveFig("equivariant_train_data_example")
     plt.show()
-    SaveData(train_losses, "train_losses_equivariant_model")
-    SaveData(test_losses, "test_losses_equivariant_model")
+
+    plot_object_and_scores(test_dataset, equivariant_model)
+    SaveFig("equivariant_test_data_example")
+    plt.show()
 
 
 
