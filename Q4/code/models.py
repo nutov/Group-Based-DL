@@ -16,10 +16,9 @@ class BasePointCloudNet(nn.Module):
         super().__init__()
         self.n = n_in  # Number of points in the point cloud
         self.dim = d_in  # Dimension of each point in the point cloud
-        self.d_in = d_in * n_in  # Input dimension after flattening (n * d)
+        self.d_input = d_in * n_in  # Input dimension after flattening (n * d)
         self.n_classes = d_out  # Number of output classes
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.execution_phase = False
         self.flatten = nn.Flatten()
 
         self.mlp = nn.Sequential(
@@ -39,9 +38,10 @@ class BasePointCloudNet(nn.Module):
     def forward(self, x):
         x = self.process_input(x)
         x = self.flatten(x)
-        if self.execution_phase:
+        if self.training:
+            return self.mlp(x)
+        else:
             return func.softmax(self.mlp(x), dim=-1)  # Apply softmax to the output
-        return self.mlp(x)
 
     def save(self, path=None):
         """Save model by it's name"""
@@ -62,7 +62,7 @@ class BasePointCloudNet(nn.Module):
         self.load_state_dict(state_dict)
         self.to(self.device)
         logger.info(f"Model loaded from {path}")
-        self.execution_phase = True
+        self.eval()  # Set the model to evaluation mode
 
 
 class CanonicalizationNet(BasePointCloudNet):
@@ -99,17 +99,29 @@ class SampledSymmetrizationNet(BasePointCloudNet):
         return res / n_samples
 
 
-class LinearEquivariantLayer(BasePointCloudNet):
+class LinearEquivariantLayer(nn.Module):
     def __init__(self, d_in=3, d_out=40):
-        super(BasePointCloudNet, self).__init__()
-        # input dimension: [n_in, d_in]
-        # output dimension: [n_in, d_out]
+        super().__init__()
+        self.d_in = d_in
+        self.d_out = d_out
         self.w1 = nn.Linear(d_in, d_out)
         self.w2 = nn.Linear(d_in, d_out)
 
     def forward(self, x):
-        # x: (n, 3)
+        # x: (*, n, 3)
         return self.w1(x) + self.w2(torch.sum(x, dim=-2, keepdim=True))  # output: (n, d_out)
+
+class LinearInvariantNet(nn.Module):
+    def __init__(self, d_in=3, d_out=40):
+        super().__init__()
+        self.d_in = d_in
+        self.d_out = d_out
+        self.w = nn.Linear(d_in, d_out)
+
+    def forward(self, x):
+        # x: (*, n, 3)
+        return self.w(torch.sum(x, dim=-2))  # output: (n, d_out)
+
 
 
 class LinearEquivariantNet(BasePointCloudNet):
@@ -144,7 +156,7 @@ class LinearEquivariantNet(BasePointCloudNet):
         if x.shape[-2] > 1000:
             # take only the first 1000 points
             x = x[..., :1000, :]
-            return x
+        return x
 
 
     def forward(self, x):
@@ -159,10 +171,10 @@ class LinearEquivariantNet(BasePointCloudNet):
             pooled, _ = res_equivariant.max(dim=-2)
         else:
             pooled = res_equivariant.mean(dim=-2)
-        if self.execution_phase:
-            return func.softmax(self.invariant_mpl(pooled), dim=-1)
-        else:
+        if self.training:
             return self.invariant_mpl(pooled)
+        else:
+            return func.softmax(self.invariant_mpl(pooled), dim=-1)
 
 # TODO: make AugmentedInvariantNet
 # class Canonization_Net(nn.Module):

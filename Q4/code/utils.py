@@ -78,16 +78,19 @@ def test_equivariance_equivariant_layer(net: models.BasePointCloudNet, input:tor
     return torch.allclose(y[perm], y_perm, atol=tol)
 #
 #
-# def test_equivariance(Linear_eq_layer,d_in=10, n=10, tol=1e-5):
-#     net = Linear_eq_layer(d_in=d_in)
-#     x = torch.randn(n, d_in)
-#     perm = torch.randperm(n)
-#     x_perm = x[perm]
-#
-#     y = net(x)[perm]
-#     y_perm = net(x_perm)
-#
-#     return torch.allclose(y, y_perm, atol=tol)
+def test_equivariant_layer():
+    n = 256
+    d = 3
+    tol = 1e-5
+    net = models.LinearEquivariantLayer(d_in=d, d_out=40)
+    x = torch.randn(n, d)
+    perm = torch.randperm(n)
+    x_perm = x[perm]
+
+    y = net(x)[perm]
+    y_perm = net(x_perm)
+
+    return torch.allclose(y, y_perm, atol=tol)
 #
 # def test_invariant_net(model_class, d_in=10, n=6, tol=1e-5):
 #     net = model_class(d_in=d_in)

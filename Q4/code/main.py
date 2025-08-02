@@ -1,3 +1,8 @@
+import matplotlib
+import os
+if os.name == 'nt':
+    os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 
