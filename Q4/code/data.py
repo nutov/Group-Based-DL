@@ -12,25 +12,29 @@ from file_manager import logger
 import matplotlib.pyplot as plt
 
 class BaseDataset(Dataset):
-    def __init__(self, test_or_train, num_points=256, data_dim=3):
+    def __init__(self, test_or_train, num_points=256, data_dim=3, device=None):
         """
         :param test_or_train: get the values "test" or "train" to load the respective dataset
         :param num_points:  number of points that was specified to be used in the dataset
         :param data_dim:  dimension of data specified to be used in the dataset (there is 6 in total - 3 for point and 3 normal)
         """
-
+        logger.info(f"Loading {test_or_train} dataset.")
         self.base_path = BaseDataset._get_data_path()
         self.labels_to_numbers, self.numbers_to_labes = self._get_labels_dictionaries()  # dictionary {label-name: label-number}
         self.test_or_train = test_or_train  # "test" or "train"
         self.filenames = self._get_filenames()  # list of all filenames
-        self.filenames_per_label = self._get_fialenames_per_label()  # dictionary {label-name: list of filenames}
+        self.filenames_per_label = self._get_filenames_per_label()  # dictionary {label-name: list of filenames}
 
         self.num_points = num_points
         self.data_dim = data_dim
 
         self.preprocess_success = False
         self.preprocess_success = self.preprocess_data()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        if device is None:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        else:
+            self.device = device
+
 
 
     @staticmethod
@@ -58,7 +62,7 @@ class BaseDataset(Dataset):
         return self._read_lines(file_path)
 
 
-    def _get_fialenames_per_label(self):
+    def _get_filenames_per_label(self):
         """
         Returns a dictionary where keys are label names and values are lists of filenames for that label.
         """
@@ -81,18 +85,21 @@ class BaseDataset(Dataset):
         if BaseDataset._get_config_value(key):
             return True
 
+        logger.info(f"Preprocessing {self.test_or_train} dataset.")
         for filename in self.filenames:
+            # get data
             label_name, absolute_path = self._absolute_path(filename)
-            input_data = np.loadtxt(absolute_path, delimiter=',', dtype=np.float32)  # shape[N, 6]
-            Mmean = np.mean(input_data, axis=0)[:self.data_dim]  # [data_dim]
-            input_data = input_data[:, :self.data_dim] - Mmean[None, :]  # [N, data_dim]
-            Mmax = np.max(np.abs(input_data), axis=0) # [data_dim]
-            assert np.any(Mmax > 0), f"Max value for {label_name} is zero, cannot normalize data."
-            input_data = input_data / Mmax[None, :]
+            input_data = np.loadtxt(absolute_path, delimiter=',', dtype=np.float64)[: , :self.data_dim]    # shape (n, 3)
+
+            # calculate center and main axis
+            center = np.mean(input_data, axis=0)  # [data_dim]
+            input_data -= center[None, :]  # (n, 3)
+            scale = np.percentile(np.linalg.norm(input_data, axis=1), 99)
+            input_data /= scale
             processed_path = osp.join(self.base_path, label_name, 'processed_' + filename + '.txt')
-            processed_shortened_path = osp.join(self.base_path, label_name, 'processed_shortened_' + filename + '.txt')
             np.savetxt(processed_path, input_data, delimiter=',', fmt='%.8f')
-            np.savetxt(processed_shortened_path, input_data[:self.num_points, :], delimiter=',', fmt='%.8f')
+            # processed_shortened_path = osp.join(self.base_path, label_name, 'processed_shortened_' + filename + '.txt')
+            # np.savetxt(processed_shortened_path, input_data[:self.num_points, :], delimiter=',', fmt='%.8f')
 
         BaseDataset._set_config_value(key, True)
         return True
@@ -119,7 +126,7 @@ class BaseDataset(Dataset):
         label_name, absolute_path = self._absolute_path(filename)
         label = torch.tensor(self.labels_to_numbers[label_name], dtype=torch.int64)
         input_data = np.loadtxt(absolute_path, delimiter=',')
-        input_tensor = torch.from_numpy(input_data).to(torch.float32)
+        input_tensor = torch.tensor(input_data, device=self.device, dtype=torch.float32)
         # assert input_tensor.shape[0] == self.num_points, f"Input data has fewer points than expected: {input_tensor.shape[0]} < {self.num_points}"
         # assert input_tensor.shape[1] == self.data_dim, f"Input data has fewer dimensions than expected: {input_tensor.shape[1]} < {self.data_dim}"
 
@@ -177,10 +184,10 @@ class BaseDataset(Dataset):
 
 
 class TrainDataset(BaseDataset):
-    def __init__(self):
-        super().__init__(test_or_train='train')
+    def __init__(self, **kwargs):
+        super().__init__(test_or_train='train', **kwargs)
 
 
 class TestDataset(BaseDataset):
-    def __init__(self):
-        super().__init__(test_or_train='test')
+    def __init__(self, **kwargs):
+        super().__init__(test_or_train='test', **kwargs)

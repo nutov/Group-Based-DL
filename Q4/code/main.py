@@ -15,13 +15,14 @@ import models
 from file_manager import SaveFig, logger, SaveData
 import utils
 from make_plots import plot_object_and_scores
+# import multiprocessing as mp
+# mp.set_start_method('spawn', force=True)
 
-TRAIN_FLAG = False
+TRAIN_FLAG = True
 
 
 data_n = int(256)
 data_dim = int(3)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def main():
 
@@ -33,15 +34,15 @@ def main():
     # plot_pcd(test_dataset[0][0])
     # plt.show()
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
-    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True, num_workers=4)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True)
 
     # train LinearEquivariantNet model
-    equivariant_model = models.LinearEquivariantNet().to(device=device)
+    equivariant_model = models.LinearEquivariantNet()
 
     if TRAIN_FLAG:
-        optimizer = torch.optim.Adam(equivariant_model.parameters(), lr=0.001)
-        equivariant_model, train_losses, test_losses = utils.train(equivariant_model, optimizer, train_dataloader, test_dataloader, epochs=10)
+        optimizer = torch.optim.Adam(equivariant_model.parameters(), lr=0.005)
+        equivariant_model, train_losses, test_losses = utils.train(equivariant_model, optimizer, train_dataloader, test_dataloader, epochs=3)
         plt.figure(1)
         plt.semilogy(np.array(train_losses) + 1e-13, label='Train Loss')
         plt.semilogy(np.array(test_losses) + 1e-13, label='Test Loss')
@@ -55,13 +56,16 @@ def main():
         SaveData(test_losses, "test_losses_equivariant_model")
         equivariant_model.save()
     else:
-        equivariant_model.load()
-        equivariant_model.eval()
+        equivariant_model.load(r'/home/tuvy/Documents/study/deep_and_groups_hw4/Group-Based-DL/Q4/code/results_1/data/LinearEquivariantNet100.pth')
         # test invariance to permutations
-        first_input = train_dataset[0][0]
-        for i in range(10):
-            utils.test_equivariance_equivariant_layer(equivariant_model, first_input)
+        # first_input = train_dataset[0][0]
+        # y = equivariant_model(first_input)
+        # for i in range(10):
+        #     utils.test_equivariance_equivariant_layer(equivariant_model, first_input)
 
+    # calc accuracy on train and test datasets
+    utils.calculate_accuracy(equivariant_model, train_dataloader)
+    utils.calculate_accuracy(equivariant_model, test_dataloader)
 
     # check results for different inputs
     output_per_label = []
@@ -77,20 +81,10 @@ def main():
         output_per_label.append(output_data)
 
     # check if the output_data is different for each input data and the Forbinius norm for each pair of outputs
-    n = len(output_data)
-    distances = np.zeros((n, n))
+    logger.info("Distance matrix between outputs for different labels:")
     for i in range(len(output_per_label)):
         for j in range(i+1, len(output_per_label)):
-            distances[i, j] = np.linalg.norm(output_per_label[i] - output_per_label[j])
-            distances[j, i] = distances[i, j]
-
-    # print the distance matrix logger and specify the format to be 3 decimal places
-    logger.info("Distance matrix between outputs for different labels:")
-    for row in distances:
-        logger.info(" ".join(f"{val:.3f}" for val in row))
-
-
-
+            logger(f"{i}, {j}: {np.linalg.norm(output_per_label[i] - output_per_label[j])}")
 
 
 

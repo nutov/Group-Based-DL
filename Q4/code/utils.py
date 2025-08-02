@@ -1,7 +1,7 @@
 import torch
-import torch.nn.functional as func
+import torch.nn.functional as F
 import numpy as np
-from file_manager import logger
+from file_manager import logger, SaveData, TimeIt
 import models
 import viz
 import make_plots
@@ -61,21 +61,77 @@ def create_permutations2(n:int):
 #     y_perm = net(x_perm)
 #
 #     return torch.allclose(y, y_perm, atol=tol)
-#
-#
-def test_equivariance_equivariant_layer(net: models.BasePointCloudNet, input:torch.tensor, tol=1e-5):
 
-    x = input
+@TimeIt
+def calculate_accuracy(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader):
+    """
+    Calculate the accuracy of the model on the given data loader.
+    :param model: The model to evaluate.
+    :param data_loader: DataLoader containing the dataset.
+    :return: Accuracy as a float.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    model.eval()
+
+    correct = 0.0
+    total = 0.0
+
+    with torch.no_grad():
+        for inputs, target_labels in data_loader:
+            inputs, target_labels = inputs.to(device), target_labels.to(device)
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, 1)
+            total += target_labels.size(0)
+            correct += (predicted == target_labels).sum().item()
+
+    accuracy = correct / total if total > 0. else 0.0
+    logger.info(f"Accuracy of {model.__class__.__name__} on {data_loader.dataset.__class__.__name__} | {accuracy:.4f}")
+
+    return accuracy
+
+@TimeIt
+def calculate_loss_on_dataset(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader):
+    """
+    Calculate the average loss of the model on the given data loader.
+    :param model: The model to evaluate.
+    :param data_loader: DataLoader containing the dataset.
+    :return: Average loss as a float.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    model.eval()
+
+    total_loss = 0.0
+    num_batches = 0
+
+    with torch.no_grad():
+        for inputs, target_labels in data_loader:
+            inputs, target_labels = inputs.to(device), target_labels.to(device)
+            outputs = model(inputs)
+            loss = F.cross_entropy(outputs, target_labels)
+            total_loss += loss.item()
+            num_batches += 1
+
+    avg_loss = total_loss / num_batches if num_batches > 0 else float('inf')
+    logger.info(f"Average loss of {model.__class__.__name__} on {data_loader.dataset.__class__.__name__} : {avg_loss:.4f}")
+
+    return avg_loss
+
+#
+#
+def test_equivariance_equivariant_layer(net: models.BasePointCloudNet, input:torch.tensor, tol=1e-3):
+
+    x = input  # shape [n, d]
     n = x.shape[0]
     perm = torch.randperm(n)
+    x_perm = x[perm]
 
-    x_perm = x[perm, :]
-
-    y = net(x)
-    y_perm = net(x_perm)
+    y = net(x)  # shape [d_out]
+    y_perm = net(x_perm)  # shape [d_out]
     logger.info(f"Permuted output distance: {torch.norm(y - y_perm)}")
 
-    return torch.allclose(y[perm], y_perm, atol=tol)
+    return torch.allclose(y, y_perm, atol=tol)
 #
 #
 def test_equivariant_layer():
@@ -111,7 +167,7 @@ def test_equivariant_layer():
 #
 #
 # def compute_variance_target(x):
-#     return torch.unsqueeze(x.var(dim=1, unbiased=True),dim=1)
+#     return torch.unsqueeze(x.var(d_in=1, unbiased=True),d_in=1)
 #
 # def custom_loss(outputs, targets):
 #     prec = 1 / torch.var(outputs)
@@ -119,21 +175,28 @@ def test_equivariant_layer():
 #     return not_mse - 0.5 * torch.log(prec)
 #
 #
-# def _basic_training(model, optimizer, target_label, in_data):
-#     # check that the model updates
-#     optimizer.zero_grad()
-#     output = model(in_data)
-#     loss = func.cross_entropy(output, target_label)
-#     loss.backward()
-#     optimizer.step()
-#     return loss.item()
-#
-# def _augmentation_f(data):
-#     # raise NotImplemented
-#     return data  #TODO
+@TimeIt
+def _basic_training(model, optimizer, target_label, in_data):
+    # check that the model updates
+    optimizer.zero_grad()
+    output = model(in_data)
+    loss = F.cross_entropy(output, target_label)
+    loss.backward()
+    optimizer.step()
+    return loss.item()
 
+def _augmentation_f(data):
+    # raise NotImplemented
+    return data  #TODO
 
-def train(model: models.BasePointCloudNet, optimizer, train_loader, test_loader=None, epochs=100, augmentations=0, verbose=False, use_augmentation=False):
+@TimeIt
+def train(model: models.BasePointCloudNet,
+          optimizer,
+          train_loader,
+          test_loader=None,
+          epochs=100,
+          augmentations=0,
+          use_augmentation=False):
     """
     Train a model with optional data augmentation.
     :param model:
@@ -145,60 +208,46 @@ def train(model: models.BasePointCloudNet, optimizer, train_loader, test_loader=
     :param verbose:
     :param use_augmentation:
     :return:
-    model, train_losses, test_losses
+    Trained model, training accuracy, training loss, test accuracy, test loss.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    train_losses = []
-    test_losses = []
-    model.execution_phase = False
+
+    train_loss = []
+    test_loss = []
+    train_acc = []
+    test_acc = []
+
 
 
     for epoch in range(epochs):
+
         logger.info(f"Epoch {epoch}")
         model.train()
-        running_loss = 0.0
-        num_batches = 0
         for inputs, target_labels in train_loader:
             inputs, target_labels = inputs.to(device), target_labels.to(device)
             if use_augmentation:
                 for _ in range(augmentations):
                     aug_inputs = _augmentation_f(inputs)
                     loss = _basic_training(model, optimizer, target_labels, aug_inputs)
-                    running_loss += loss
-                    num_batches += 1
             else:
                 loss = _basic_training(model, optimizer, target_labels, inputs)
 
-                running_loss += loss
-                num_batches += 1
-        if num_batches == 0:
-            logger.info("Warning: No batches processed in this epoch. Check your data loader.")
-            continue
+        # calculate middle metrics
+        train_acc.append(calculate_accuracy(model, train_loader))
+        train_loss.append(calculate_loss_on_dataset(model, train_loader))
+        if test_loader:
+            test_acc.append(calculate_accuracy(model, test_loader))
+            test_loss.append(calculate_loss_on_dataset(model, test_loader))
 
-        avg_train_loss = running_loss / num_batches
-        train_losses.append(avg_train_loss)
+        if epoch % 10 == 0 or epoch == epochs - 1:
+            model.save(version=epoch)
+            SaveData(train_loss, "train_loss")
+            if test_loss:
+                SaveData(test_loss, "test_loss")
 
-        avg_test_loss = None
-        if test_loader is not None:
-            model.eval()
-            test_loss = 0.0
-            test_batches = 0
-            with torch.no_grad():
-                for inputs, target_labels in test_loader:
-                    inputs, target_labels = inputs.to(device), target_labels.to(device)
-                    outputs = model(inputs)
-                    loss = func.cross_entropy(outputs, target_labels)
-                    test_loss += loss.item()
-                    test_batches += 1
-            avg_test_loss = test_loss / max(1, test_batches)
-            test_losses.append(avg_test_loss)
-        logger.info(f"Epoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.8f}")
-        if avg_test_loss is not None:
-            logger.info(f" | Test Loss: {avg_test_loss:.8f}")
-
-        model.execution_phase = True
-    return model, train_losses, test_losses
+    model.eval()
+    return model, train_acc, train_loss, test_acc, test_loss
 
 # def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
 #     device = "cuda" if torch.cuda.is_available() else "cpu"

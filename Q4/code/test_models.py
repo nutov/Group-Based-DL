@@ -10,6 +10,7 @@ import numpy as np
 import unittest
 import data
 import torch
+import torch.nn as nn
 
 class TestModelsPermutationInvariance(unittest.TestCase):
     """
@@ -47,8 +48,8 @@ class TestModelsPermutationInvariance(unittest.TestCase):
         net.w2.bias.data = torch.randn_like(net.w2.bias.data, dtype=torch.float64)
         net.eval()
         for i in range(10):
-            x = torch.randn((n, d), dtype=torch.float64)
-            perm = torch.randperm(n)
+            x = torch.randn((n, d), dtype=torch.float64, device=net.device)
+            perm = torch.randperm(n, device=net.device)
             x_perm = x[perm]
 
             y = net(x)
@@ -58,8 +59,8 @@ class TestModelsPermutationInvariance(unittest.TestCase):
 
         n_batch = 32
         for i in range(10):
-            x = torch.randn(n_batch, n, d, dtype=torch.float64)
-            perm = torch.randperm(n)
+            x = torch.randn(n_batch, n, d, dtype=torch.float64, device=net.device)
+            perm = torch.randperm(n, device=net.device)
             x_perm = x[:, perm, :]
 
             y = net(x)
@@ -73,15 +74,15 @@ class TestModelsPermutationInvariance(unittest.TestCase):
         n = 256
         d = 128
         tol = 1e-5
-        net = models.LinearInvariantNet(d_in=d, d_out=40)
+        net = models.InvariantNet(d_in=d, d_out=40)
         # make the weight matrix to be random
         net.w.weight.data = torch.randn_like(net.w.weight.data, dtype=torch.float64)
         net.w.bias.data = torch.randn_like(net.w.bias.data, dtype=torch.float64)
         net.eval()
 
         for i in range(10):
-            x = torch.randn(n, d, dtype=torch.float64)
-            perm = torch.randperm(n)
+            x = torch.randn(n, d, dtype=torch.float64, device=net.device)
+            perm = torch.randperm(n, device=net.device)
             x_perm = x[perm]
 
             y = net(x)
@@ -91,8 +92,8 @@ class TestModelsPermutationInvariance(unittest.TestCase):
 
         n_batch = 32
         for i in range(10):
-            x = torch.randn((n_batch, n, d), dtype=torch.float64)
-            perm = torch.randperm(n)
+            x = torch.randn((n_batch, n, d), dtype=torch.float64, device=net.device)
+            perm = torch.randperm(n, device=net.device)
             x_perm = x[:,perm,:]
 
             y = net(x)
@@ -116,8 +117,8 @@ class TestModelsPermutationInvariance(unittest.TestCase):
                     m.bias.data = torch.randn_like(m.bias.data, dtype=torch.float64)
 
         for i in range(10):
-            x = torch.randn((n, d), dtype=torch.float64)
-            perm = torch.randperm(n)
+            x = torch.randn((n, d), dtype=torch.float64, device=net.device)
+            perm = torch.randperm(n, device=net.device)
             x_perm = x[perm]
 
             y = net(x)
@@ -127,8 +128,8 @@ class TestModelsPermutationInvariance(unittest.TestCase):
 
         n_batch = 32
         for i in range(10):
-            x = torch.randn((n_batch, n, d), dtype=torch.float64)
-            perm = torch.randperm(n)
+            x = torch.randn((n_batch, n, d), dtype=torch.float64, device=net.device)
+            perm = torch.randperm(n, device=net.device)
             x_perm = x[:, perm, :]
 
             y = net(x)
@@ -137,3 +138,57 @@ class TestModelsPermutationInvariance(unittest.TestCase):
                             f"Equivariant net failed for iteration {i}: {torch.norm(y - y_perm)}")
 
         return True
+
+    def test_loading_model(self):
+        """
+        Test loading a model from a file.
+        Create a model that at each layer the weights are the number of the layer + 0.1
+        then save it to a file.
+        Create a new model that loads the weights from the file and check that the weights are the same.
+        """
+        tol = 1e-10
+        model = models.LinearEquivariantNet()
+
+        for i, m in enumerate(model.modules()):
+            if isinstance(m, nn.Linear):
+                m.weight.data.fill_(i + 0.1)
+                if m.bias is not None:
+                    m.bias.data.fill_(i + 0.1)
+            elif isinstance(m, nn.BatchNorm1d):
+                m.weight.data.fill_(i + 100.1)
+                m.bias.data.fill_(i + 100.1)
+            elif isinstance(m, models.LinearEquivariantLayer):
+                m.w1.weight.data.fill_(i + 1000.1)
+                m.w2.weight.data.fill_(i + 2000.1)
+                m.w1.bias.data.fill_(i + 1000.1)
+                m.w2.bias.data.fill_(i + 2000.1)
+            else:
+                print(m)
+
+        model.save("test_model.pth")
+        loaded_model = models.LinearEquivariantNet()
+        loaded_model.load("test_model.pth")
+
+        for i, (m, m_loaded) in enumerate(zip(model.modules(), loaded_model.modules())):
+            if isinstance(m, nn.Linear):
+                self.assertTrue(torch.allclose(m.weight.data, m_loaded.weight.data, atol=tol),
+                                f"Layer {i} weight mismatch")
+                if m.bias is not None:
+                    self.assertTrue(torch.allclose(m.bias.data, m_loaded.bias.data, atol=tol),
+                                    f"Layer {i} bias mismatch")
+            elif isinstance(m, nn.BatchNorm1d):
+                self.assertTrue(torch.allclose(m.weight.data, m_loaded.weight.data, atol=tol),
+                                f"Layer {i} BatchNorm weight mismatch")
+                self.assertTrue(torch.allclose(m.bias.data, m_loaded.bias.data, atol=tol),
+                                f"Layer {i} BatchNorm bias mismatch")
+            elif isinstance(m, models.LinearEquivariantLayer):
+                self.assertTrue(torch.allclose(m.w1.weight.data, m_loaded.w1.weight.data, atol=tol),
+                                f"Layer {i} w1 weight mismatch")
+                self.assertTrue(torch.allclose(m.w2.weight.data, m_loaded.w2.weight.data, atol=tol),
+                                f"Layer {i} w2 weight mismatch")
+                self.assertTrue(torch.allclose(m.w1.bias.data, m_loaded.w1.bias.data, atol=tol),
+                                f"Layer {i} w1 bias mismatch")
+                self.assertTrue(torch.allclose(m.w2.bias.data, m_loaded.w2.bias.data, atol=tol),
+                                f"Layer {i} w2 bias mismatch")
+
+        os.remove("test_model.pth")

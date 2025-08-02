@@ -1,2 +1,5 @@
 *.json
 *.png
+# subdirectories times, figures in results
+results/figures/**
+results/times/** 

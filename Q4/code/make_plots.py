@@ -4,31 +4,32 @@ import data
 import models
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 
-def plot_squared_image_of_all_labels(dataset: data.BaseDataset):
-    """
-    Plot a squared image of all labels_to_numbers in the dataset.
-    :param dataset: torch.utils.data.Dataset object
-    """
-    labels = dataset.labels_to_numbers
-    num_labels = len(labels)
-    num_cols = int(num_labels ** 0.5)
-    num_rows = num_cols
-
-    fig, axs = plt.subplots(num_rows, num_cols, figsize=(15, 15))
-    axs = axs.flatten()
-
-    for i, (label_name, label_num) in enumerate(labels.items()):
-        if i >= num_rows * num_cols:
-            break
-        pcd = dataset.filenames_per_label[label_name][0]  # Get the first point cloud for each label
-        plot_pcd_2D(pcd, fig_num=None)
-        axs[i].set_title(label_name)
-        axs[i].axis('off')
-
-    plt.tight_layout()
-    SaveFig(fig, "squared_image_of_all_labels")
-    plt.show()
+# def plot_squared_image_of_all_labels(dataset: data.BaseDataset):
+#     """
+#     Plot a squared image of all labels_to_numbers in the dataset.
+#     :param dataset: torch.utils.data.Dataset object
+#     """
+#     labels = dataset.labels_to_numbers
+#     num_labels = len(labels)
+#     num_cols = int(num_labels ** 0.5)
+#     num_rows = num_cols
+#
+#     fig, axs = plt.subplots(num_rows, num_cols, figsize=(15, 15))
+#     axs = axs.flatten()
+#
+#     for i, (label_name, label_num) in enumerate(labels.items()):
+#         if i >= num_rows * num_cols:
+#             break
+#         pcd = dataset.filenames_per_label[label_name][0]  # Get the first point cloud for each label TODO: fix it if needed
+#         plot_pcd_2D(pcd, fig_num=None)
+#         axs[i].set_title(label_name)
+#         axs[i].axis('off')
+#
+#     plt.tight_layout()
+#     SaveFig(fig, "squared_image_of_all_labels")
+#     plt.show()
 
 def plot_object_and_scores(dataset: data.BaseDataset, model: models.BasePointCloudNet, inx=0):
     """
@@ -46,10 +47,12 @@ def plot_object_and_scores(dataset: data.BaseDataset, model: models.BasePointClo
 
 
 
-def plot_object_and_scores_helper(classifier_output, input_data, true_label, dataset):
+def plot_object_and_scores_helper(classifier_output:torch.tensor, input_data:torch.tensor, true_label, dataset):
 
     true_label_name = dataset.numbers_to_labes[true_label]
     scores = classifier_output.to(device="cpu").detach().numpy()
+    scores = np.squeeze(scores)
+    input_data = input_data.to(device="cpu").detach().numpy()
     list_of_labels = dataset.numbers_to_labes
 
     fig, axs = plt.subplots(1, 2, figsize=(15, 7))

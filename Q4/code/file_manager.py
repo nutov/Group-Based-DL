@@ -25,18 +25,17 @@ for dir_path in [RESULT_DIR, TIMERS_DIR, FIGURES_DIR, DATA_DIR]:
 
 def MakeLogger(debugMode=False):
 
-
-
     # Create and config logger
     global RESULT_DIR
     logger_path = osp.join(RESULT_DIR, 'logger.log')
-    if osp.isfile(logger_path):
-        # delete the file if it exists
-        os.remove(logger_path)
+    i=0
+    while osp.isfile(logger_path):
+        logger_path = osp.join(RESULT_DIR, 'logger_' + str(i) + '.log')
+        i += 1
 
     debug_level = logging.DEBUG if debugMode else logging.INFO
     LOG_FORMAT = "%(levelname)s: %(asctime)s  %(message)s"
-    logging.basicConfig(filename=osp.join(RESULT_DIR, 'logger.log'),
+    logging.basicConfig(filename=logger_path,
                         level=debug_level,  # can be DEBUG, INFO, WARNING, ERROR, CRITICAL
                         format=LOG_FORMAT)
     logger = logging.getLogger()
