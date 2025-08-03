@@ -63,12 +63,12 @@ def create_permutations2(n:int):
 #     return torch.allclose(y, y_perm, atol=tol)
 
 @TimeIt
-def calculate_accuracy(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader):
+def calculate_accuracy_and_loss(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader):
     """
-    Calculate the accuracy of the model on the given data loader.
+    Calculate the accuracy and average loss of the model on the given data loader.
     :param model: The model to evaluate.
     :param data_loader: DataLoader containing the dataset.
-    :return: Accuracy as a float.
+    :return: Tuple (accuracy, avg_loss).
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -76,47 +76,23 @@ def calculate_accuracy(model: torch.nn.Module, data_loader: torch.utils.data.Dat
 
     correct = 0.0
     total = 0.0
-
-    with torch.no_grad():
-        for inputs, target_labels in data_loader:
-            inputs, target_labels = inputs.to(device), target_labels.to(device)
-            outputs = model(inputs)
-            _, predicted = torch.max(outputs, 1)
-            total += target_labels.size(0)
-            correct += (predicted == target_labels).sum().item()
-
-    accuracy = correct / total if total > 0. else 0.0
-    logger.info(f"Accuracy of {model.__class__.__name__} on {data_loader.dataset.__class__.__name__} | {accuracy:.4f}")
-
-    return accuracy
-
-@TimeIt
-def calculate_loss_on_dataset(model: torch.nn.Module, data_loader: torch.utils.data.DataLoader):
-    """
-    Calculate the average loss of the model on the given data loader.
-    :param model: The model to evaluate.
-    :param data_loader: DataLoader containing the dataset.
-    :return: Average loss as a float.
-    """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    model.eval()
-
     total_loss = 0.0
-    num_batches = 0
 
     with torch.no_grad():
         for inputs, target_labels in data_loader:
             inputs, target_labels = inputs.to(device), target_labels.to(device)
             outputs = model(inputs)
             loss = F.cross_entropy(outputs, target_labels)
-            total_loss += loss.item()
-            num_batches += 1
+            _, predicted = torch.max(outputs, 1)
+            total += target_labels.size(0)
+            correct += (predicted == target_labels).sum().item()
+            total_loss += loss.item() * target_labels.size(0)
 
-    avg_loss = total_loss / num_batches if num_batches > 0 else float('inf')
-    logger.info(f"Average loss of {model.__class__.__name__} on {data_loader.dataset.__class__.__name__} : {avg_loss:.4f}")
+    accuracy = correct / total if total > 0. else 0.0
+    avg_loss = total_loss / total if total > 0. else float('inf')
+    logger.info(f"Accuracy, Loss of {model.__class__.__name__} on {data_loader.dataset.__class__.__name__} | {accuracy:.4f}, Avg Loss: {avg_loss:.4f}")
 
-    return avg_loss
+    return accuracy, avg_loss
 
 #
 #
@@ -205,7 +181,6 @@ def train(model: models.BasePointCloudNet,
     :param test_loader:
     :param epochs:
     :param augmentations:
-    :param verbose:
     :param use_augmentation:
     :return:
     Trained model, training accuracy, training loss, test accuracy, test loss.
@@ -233,18 +208,22 @@ def train(model: models.BasePointCloudNet,
             else:
                 loss = _basic_training(model, optimizer, target_labels, inputs)
 
-        # calculate middle metrics
-        train_acc.append(calculate_accuracy(model, train_loader))
-        train_loss.append(calculate_loss_on_dataset(model, train_loader))
-        if test_loader:
-            test_acc.append(calculate_accuracy(model, test_loader))
-            test_loss.append(calculate_loss_on_dataset(model, test_loader))
+        model.save(version=epoch)
 
-        if epoch % 10 == 0 or epoch == epochs - 1:
-            model.save(version=epoch)
-            SaveData(train_loss, "train_loss")
-            if test_loss:
-                SaveData(test_loss, "test_loss")
+        # # calculate middle metrics
+        # _acc, _loss = calculate_accuracy_and_loss(model, train_loader)
+        # train_acc.append(_acc)
+        # train_loss.append(_loss)
+        # if test_loader:
+        #     _test_acc, _test_loss = calculate_accuracy_and_loss(model, test_loader)
+        #     test_acc.append(_test_acc)
+        #     test_loss.append(_test_loss)
+
+        # if epoch % 10 == 0 or epoch == epochs - 1:
+        #     model.save(version=epoch)
+        #     SaveData(train_loss, "train_loss")
+        #     if test_loss:
+        #         SaveData(test_loss, "test_loss")
 
     model.eval()
     return model, train_acc, train_loss, test_acc, test_loss
@@ -261,4 +240,3 @@ def train(model: models.BasePointCloudNet,
 #             if not torch.allclose(y_ref[perm], y_alt, atol=tol):
 #                 return False
 #     return True
-

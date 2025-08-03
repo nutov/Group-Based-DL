@@ -4,6 +4,8 @@ import logging
 import time
 import matplotlib.pyplot as plt
 import pickle
+import re
+import common
 
 # call example: from file_management import SaveFig, SaveData, LoadData, MakeLogger, TimeIt
 
@@ -14,13 +16,47 @@ def MakeDirIfNotDir(path):
         os.makedirs(path)
     return path
 
-"""Create result directories in the current working directory."""
-RESULT_DIR = osp.join(osp.dirname(osp.abspath(__file__)), 'results')
-TIMERS_DIR = osp.join(RESULT_DIR, 'timers')
-FIGURES_DIR = osp.join(RESULT_DIR, 'figures')
-DATA_DIR = osp.join(RESULT_DIR, 'data')  # saved data *not the input dataset*
-for dir_path in [RESULT_DIR, TIMERS_DIR, FIGURES_DIR, DATA_DIR]:
-    MakeDirIfNotDir(dir_path)
+RESULT_DIR = None
+TIMERS_DIR = None
+FIGURES_DIR = None
+DATA_DIR = None
+DATE_FORMAT = "%Y%m%d_%H%M"
+
+def set_result_dir(path=None):
+    """
+    Set up global result directories. If path is None, create a timestamped results directory.
+    """
+    global RESULT_DIR, TIMERS_DIR, FIGURES_DIR, DATA_DIR
+    if path is None:
+        RESULT_DIR = osp.join(osp.dirname(osp.abspath(__file__)), 'results', f'{time.strftime(DATE_FORMAT)}')
+    elif path == 'last':
+        RESULT_DIR = get_last_result_dir()
+        if not osp.isdir(RESULT_DIR):
+            raise FileNotFoundError (f"No results directory found. Please run set_result_dir() without arguments first.")
+    else:
+        RESULT_DIR = osp.abspath(path)
+    TIMERS_DIR = osp.join(RESULT_DIR, 'timers')
+    FIGURES_DIR = osp.join(RESULT_DIR, 'figures')
+    DATA_DIR = osp.join(RESULT_DIR, 'data')
+    for dir_path in [RESULT_DIR, TIMERS_DIR, FIGURES_DIR, DATA_DIR]:
+        MakeDirIfNotDir(dir_path)
+
+def get_last_result_dir():
+    """
+    Get the last result directory created by set_result_dir by finding the directory in the results folder that has the most recent timestamp.
+    If no results directory exists, return None.
+    """
+    results_dir = osp.join(osp.dirname(osp.abspath(__file__)), 'results')
+    if not osp.isdir(results_dir):
+        return None
+    dirs = [d for d in os.listdir(results_dir) if osp.isdir(osp.join(results_dir, d)) and re.match(r'\d{8}_\d{4}', d)]
+    if not dirs:
+        return None
+    dirs.sort(reverse=True)  # Sort directories by name (timestamp)
+    last_dir = dirs[0]
+    return osp.join(results_dir, last_dir)
+
+set_result_dir(common.RESULT_DIR)
 
 
 def MakeLogger(debugMode=False):
@@ -101,3 +137,6 @@ def LoadData(dataName):
     with open(dataPath, 'rb') as inf:
         data = pickle.load(inf)
     return data
+
+if __name__ == "__main__":
+    a=1

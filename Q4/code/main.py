@@ -1,5 +1,7 @@
 import matplotlib
 import os
+from common import TRAIN_FLAG, N_EPOCHS
+
 if os.name == 'nt':
     os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
     matplotlib.use('TkAgg')
@@ -18,7 +20,7 @@ from make_plots import plot_object_and_scores
 # import multiprocessing as mp
 # mp.set_start_method('spawn', force=True)
 
-TRAIN_FLAG = True
+import time
 
 
 data_n = int(256)
@@ -26,35 +28,43 @@ data_dim = int(3)
 
 def main():
 
-    train_dataset = data.TrainDataset()
-    test_dataset = data.TestDataset()
+    # train_dataset = data.TrainDataset()
+    # test_dataset = data.TestDataset()
+    train_dataset = data.TrainDatasetOnRam()
+    test_dataset = data.TestDatasetOnRam()
 
-    # plot_pcd(train_dataset[0][0])
-    # plt.show()
-    # plot_pcd(test_dataset[0][0])
-    # plt.show()
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=256, shuffle=False)
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True)
-    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True)
 
     # train LinearEquivariantNet model
     equivariant_model = models.LinearEquivariantNet()
 
     if TRAIN_FLAG:
         optimizer = torch.optim.Adam(equivariant_model.parameters(), lr=0.005)
-        equivariant_model, train_losses, test_losses = utils.train(equivariant_model, optimizer, train_dataloader, test_dataloader, epochs=3)
+        equivariant_model, train_acc, train_loss, test_acc, test_loss = utils.train(equivariant_model, optimizer, train_dataloader, test_loader=None, epochs=N_EPOCHS)
         plt.figure(1)
-        plt.semilogy(np.array(train_losses) + 1e-13, label='Train Loss')
-        plt.semilogy(np.array(test_losses) + 1e-13, label='Test Loss')
+        plt.semilogy(np.array(train_loss) + 1e-13, label='Train Loss')
+        plt.semilogy(np.array(test_loss) + 1e-13, label='Test Loss')
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
         plt.title('Loss per Epoch')
         plt.legend()
+        plt.grid(True)
         SaveFig("equivariant_model_loss_plot")
         plt.show()
-        SaveData(train_losses, "train_losses_equivariant_model")
-        SaveData(test_losses, "test_losses_equivariant_model")
-        equivariant_model.save()
+        plt.figure(2)
+        plt.plot(train_acc, label='Train Accuracy')
+        plt.plot(test_acc, label='Test Accuracy')
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.title('Accuracy per Epoch')
+        plt.legend()
+        plt.grid(True)
+        SaveFig("equivariant_model_accuracy_plot")
+        plt.show()
+
+
     else:
         equivariant_model.load(r'/home/tuvy/Documents/study/deep_and_groups_hw4/Group-Based-DL/Q4/code/results_1/data/LinearEquivariantNet100.pth')
         # test invariance to permutations

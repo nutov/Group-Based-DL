@@ -4,10 +4,10 @@ import os.path as osp
 
 import numpy as np
 from torch.cuda import device
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, TensorDataset
 import torch
 import viz
-from file_manager import logger
+from file_manager import logger, TimeIt
 
 import matplotlib.pyplot as plt
 
@@ -72,7 +72,7 @@ class BaseDataset(Dataset):
             filenames_per_label[label_name].append(filename)
         return filenames_per_label
 
-
+    @TimeIt
     def preprocess_data(self):
         """
         Preprocess the data.
@@ -85,7 +85,7 @@ class BaseDataset(Dataset):
         if BaseDataset._get_config_value(key):
             return True
 
-        logger.info(f"Preprocessing {self.test_or_train} dataset.")
+        logger.info(f"Start Preprocessing {self.test_or_train} dataset.")
         for filename in self.filenames:
             # get data
             label_name, absolute_path = self._absolute_path(filename)
@@ -189,5 +189,29 @@ class TrainDataset(BaseDataset):
 
 
 class TestDataset(BaseDataset):
+    def __init__(self, **kwargs):
+        super().__init__(test_or_train='test', **kwargs)
+
+class BaseDatasetOnRam(TensorDataset, BaseDataset):
+    """
+    Loads all data into RAM and behaves like a TensorDataset.
+    Inherits from both BaseDataset and TensorDataset.
+    """
+    def __init__(self, **kwargs):
+        BaseDataset.__init__(self, **kwargs)
+        data = torch.empty((len(self.filenames), self.num_points, self.data_dim), dtype=torch.float32, device=self.device)
+        labels = torch.empty(len(self.filenames), dtype=torch.int64, device=self.device)
+        for i in range(len(self.filenames)):
+            input_tensor, label = BaseDataset.__getitem__(self, i)
+            data[i] = input_tensor[:self.num_points, :self.data_dim]
+            labels[i] = label
+        TensorDataset.__init__(self, data, labels)
+    # __getitem__ and __len__ are inherited from TensorDataset
+
+class TrainDatasetOnRam(BaseDatasetOnRam):
+    def __init__(self, **kwargs):
+        super().__init__(test_or_train='train', **kwargs)
+
+class TestDatasetOnRam(BaseDatasetOnRam):
     def __init__(self, **kwargs):
         super().__init__(test_or_train='test', **kwargs)

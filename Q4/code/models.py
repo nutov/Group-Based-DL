@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import numpy as np
-from file_manager import DATA_DIR, logger
+from file_manager import DATA_DIR, logger, TimeIt
 import os.path as osp
 import torch.nn.functional as func
 
@@ -52,6 +52,7 @@ class BasePointCloudNet(nn.Module):
         else:
             return func.softmax(self.mlp(x), dim=-1)  # Apply softmax to the output
 
+    @TimeIt
     def save(self, path=None, version=None):
         """Save model by it's name"""
         if path is None:
@@ -76,6 +77,21 @@ class BasePointCloudNet(nn.Module):
         self.to(self.device)
         logger.info(f"Model loaded from {path}")
         self.eval()  # Set the model to evaluation mode
+
+        return self
+
+    def number_of_parameters(self):
+        """Return the number of parameters in the model"""
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def __repr__(self):
+        return (f"{self.__class__.__name__}(n_in={self.n}, d_in={self.d_in}, "
+                f"d_out={self.d_out}, device={self.device}, "
+                f"number_of_parameters={self.number_of_parameters()})")
+
+    def structure(self):
+        """Return a string representation of the model architecture"""
+        return str(self)
 
 
 class CanonicalizationNet(BasePointCloudNet):
