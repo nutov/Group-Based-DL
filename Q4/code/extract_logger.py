@@ -48,7 +48,8 @@ def extract_networks_evaluations(log_path):
 
 if __name__ == "__main__":
 
-    log_path = "/home/tuvy/Documents/study/deep_and_groups_hw4/Group-Based-DL/Q4/code/results/20250803_2143/logger.log"
+    log_path = "/home/tuvy/Documents/study/deep_and_groups_hw4/Group-Based-DL/Q4/code/results/20250809_1228/logger.log"
+
     networks_evaluations = extract_networks_evaluations(log_path)
     print(networks_evaluations)
 

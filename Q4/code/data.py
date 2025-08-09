@@ -7,7 +7,8 @@ from torch.cuda import device
 from torch.utils.data import Dataset, TensorDataset
 import torch
 import viz
-from file_manager import logger, TimeIt
+from Q4.code.file_manager import DATA_DIR
+from file_manager import logger, TimeIt, SaveData, LoadData
 
 import matplotlib.pyplot as plt
 
@@ -199,14 +200,32 @@ class BaseDatasetOnRam(TensorDataset, BaseDataset):
     """
     def __init__(self, **kwargs):
         BaseDataset.__init__(self, **kwargs)
-        data = torch.empty((len(self.filenames), self.num_points, self.data_dim), dtype=torch.float32, device=self.device)
-        labels = torch.empty(len(self.filenames), dtype=torch.int64, device=self.device)
-        for i in range(len(self.filenames)):
-            input_tensor, label = BaseDataset.__getitem__(self, i)
-            data[i] = input_tensor[:self.num_points, :self.data_dim]
-            labels[i] = label
-        TensorDataset.__init__(self, data, labels)
-    # __getitem__ and __len__ are inherited from TensorDataset
+
+        # Check if the data is saved to DATA_DIR
+        path_to_data = osp.join(self.base_path, f"BaseDatasetOnRam_{self.test_or_train}_data.pkl")
+        path_to_labels = osp.join(self.base_path, f"BaseDatasetOnRam_{self.test_or_train}_labels.pkl")
+        if osp.isfile(path_to_data) and osp.isfile(path_to_labels):
+            labels  = np.loadtxt(path_to_labels, delimiter=',', dtype=np.int64)
+            L = len(labels)
+            saved_data = np.loadtxt(path_to_data, delimiter=',', dtype=np.float32)  # shape (L * num_points, data_dim)
+            saved_data = saved_data.reshape((L, -1, self.data_dim))  # reshape to (L, num_points, data_dim)
+            labels = torch.tensor(labels, dtype=torch.int64, device=self.device)
+            data = torch.tensor(saved_data, dtype=torch.float32, device=self.device)
+            TensorDataset.__init__(self, data, labels)
+        else:
+            data = torch.empty((len(self.filenames), self.num_points, self.data_dim), dtype=torch.float32, device=self.device)
+            labels = torch.empty(len(self.filenames), dtype=torch.int64, device=self.device)
+            for i in range(len(self.filenames)):
+                input_tensor, label = BaseDataset.__getitem__(self, i)
+                data[i] = input_tensor[:self.num_points, :self.data_dim]
+                labels[i] = label
+            TensorDataset.__init__(self, data, labels)
+            # Save the data to DATA_DIR
+            data_to_save = data.cpu().numpy()  # shape (L, num_points, data_dim)
+            data_to_save = np.reshape(data_to_save, (-1, self.data_dim))
+            np.savetxt(path_to_data, data_to_save, delimiter=',', fmt='%.8f')
+            np.savetxt(path_to_labels, labels.cpu().numpy(), delimiter=',', fmt='%d')
+
 
 class TrainDatasetOnRam(BaseDatasetOnRam):
     def __init__(self, **kwargs):
