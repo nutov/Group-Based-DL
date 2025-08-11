@@ -4,7 +4,7 @@ import os.path as osp
 
 import numpy as np
 from torch.cuda import device
-from torch.utils.data import Dataset, TensorDataset
+from torch.utils.data import Dataset, TensorDataset, Subset
 import torch
 import viz
 from Q4.code.file_manager import DATA_DIR
@@ -13,16 +13,16 @@ from file_manager import logger, TimeIt, SaveData, LoadData
 import matplotlib.pyplot as plt
 
 class BaseDataset(Dataset):
-    def __init__(self, test_or_train, num_points=256, data_dim=3, device=None):
+    def __init__(self, partition_name, num_points=256, data_dim=3, device=None):
         """
-        :param test_or_train: get the values "test" or "train" to load the respective dataset
+        :param partition_name: get the values "test" or "train" to load the respective dataset
         :param num_points:  number of points that was specified to be used in the dataset
         :param data_dim:  dimension of data specified to be used in the dataset (there is 6 in total - 3 for point and 3 normal)
         """
-        logger.info(f"Loading {test_or_train} dataset.")
+        logger.info(f"Loading {partition_name} dataset.")
         self.base_path = BaseDataset._get_data_path()
         self.labels_to_numbers, self.numbers_to_labes = self._get_labels_dictionaries()  # dictionary {label-name: label-number}
-        self.test_or_train = test_or_train  # "test" or "train"
+        self.partition_name = partition_name  # "test", "train", "validation"
         self.filenames = self._get_filenames()  # list of all filenames
         self.filenames_per_label = self._get_filenames_per_label()  # dictionary {label-name: list of filenames}
 
@@ -35,6 +35,7 @@ class BaseDataset(Dataset):
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         else:
             self.device = device
+
 
 
 
@@ -59,13 +60,15 @@ class BaseDataset(Dataset):
 
 
     def _get_filenames(self):
-        file_path = os.path.join(self.base_path, f"modelnet40_{self.test_or_train}.txt")
+        file_path = os.path.join(self.base_path, f"{self.partition_name}.txt")
+        if not osp.isfile(file_path):
+            self.create_data_sets()
         return self._read_lines(file_path)
 
 
     def _get_filenames_per_label(self):
         """
-        Returns a dictionary where keys are label names and values are lists of filenames for that label.
+        Returns a dictionary where keys are labels names and values are lists of filenames for that label.
         """
         filenames_per_label = {label: [] for label in self.labels_to_numbers.keys()}
         for filename in self.filenames:
@@ -82,11 +85,11 @@ class BaseDataset(Dataset):
         If the preprocessing is successful, we set return True, otherwise False.
         """
         # check if the data is already preprocessed
-        key = f"{self.test_or_train}_data_preprocessed"
+        key = f"{self.partition_name}_data_preprocessed"
         if BaseDataset._get_config_value(key):
             return True
 
-        logger.info(f"Start Preprocessing {self.test_or_train} dataset.")
+        logger.info(f"Start Preprocessing {self.partition_name} dataset.")
         for filename in self.filenames:
             # get data
             label_name, absolute_path = self._absolute_path(filename)
@@ -159,39 +162,69 @@ class BaseDataset(Dataset):
                 f"Current value is {data_path}, but the directory does not exist.")
         return data_path
 
+    @staticmethod
+    def create_data_sets(p = (0.8, 0.1, 0.1)):
+        """
+        Create filelists: trainlist.txt ,validationlist.txt, testlist.txt for creating datasets
+        p is the proportion of data to be used for train, validation, and test sets.
+        """
+        logger.info("Creating filelists for datasets")
+        base_path = BaseDataset._get_data_path()
+        train_file = osp.join(base_path, 'train_list.txt')
+        test_file = osp.join(base_path, 'test_list.txt')
+        validation_file = osp.join(base_path, 'validation_list.txt')
 
-    # def show_data(self, idx=None, label=None):
-    #     """
-    #     Visualize the point cloud data.
-    #     :param idx: index of the data to visualize, if None, random index is chosen
-    #     :param label: label of the data to visualize, if None, the image is taken from the entire dataset
-    #     :return: None
-    #     """
-    #     if label is not None:
-    #         if idx is None:
-    #             idx = np.random.randint(0, len(self.filenames_per_label[label]))
-    #
-    #         filename = self.filenames_per_label[label][idx]
-    #     else:
-    #         if idx is None:
-    #             idx = np.random.randint(0, len(self.filenames))
-    #         filename = self.filenames[idx]
-    #
-    #     label_name, absolute_path = self._absolute_path(filename)
-    #     res = np.loadtxt(absolute_path, delimiter=',', dtype=np.float32)  # shape[N, 6]
-    #     viz.plot_pcd(res[:, :self.data_dim])
-    #     plt.show()
+        filelist = osp.join(base_path, 'filelist.txt')
+        lines = BaseDataset._read_lines(filelist)
+        train_lines = []
+        test_lines = []
+        validation_lines = []
+        assert len(p) == 3, "Proportions p should be a tuple of 3 values (train, validation, test)"
+        assert np.isclose(sum(p), 1.0), "Proportions p should sum to 1.0"
 
+        # put 70% of the data to train, 15% to validation, and 15% to test
+        go_to_validation = False
+        counter = 0
+        n = [0, 0]  # counters of inputs in train, validation, and test sets
+        for i, line in enumerate(lines):
+            counter += 1
+            if n[0] / counter < p[0]:
+                train_lines.append(line)
+                n[0] += 1
+            elif n[1] / counter < p[1]:
+                validation_lines.append(line)
+                n[1] += 1
+            else:
+                test_lines.append(line)
+
+        with open(train_file, 'w') as f:
+            f.write('\n'.join(train_lines))
+        with open(test_file, 'w') as f:
+            f.write('\n'.join(test_lines))
+        with open(validation_file, 'w') as f:
+            f.write('\n'.join(validation_lines))
+
+    def make_subset_for_training(self, k: int):
+        indices = []
+        for label, files in self.filenames_per_label.items():
+            # map filenames to dataset indices
+            chosen = [self.filenames.index(fn) for fn in files][:k]
+            indices.extend(chosen)
+        return Subset(self, indices)
 
 
 class TrainDataset(BaseDataset):
     def __init__(self, **kwargs):
-        super().__init__(test_or_train='train', **kwargs)
-
+        super().__init__(partition_name='train', **kwargs)
 
 class TestDataset(BaseDataset):
     def __init__(self, **kwargs):
-        super().__init__(test_or_train='test', **kwargs)
+        super().__init__(partition_name='test', **kwargs)
+
+class ValidationDataset(BaseDataset):
+    def __init__(self, **kwargs):
+        super().__init__(partition_name='validation', **kwargs)
+
 
 class BaseDatasetOnRam(TensorDataset, BaseDataset):
     """
@@ -202,8 +235,8 @@ class BaseDatasetOnRam(TensorDataset, BaseDataset):
         BaseDataset.__init__(self, **kwargs)
 
         # Check if the data is saved to DATA_DIR
-        path_to_data = osp.join(self.base_path, f"BaseDatasetOnRam_{self.test_or_train}_data.pkl")
-        path_to_labels = osp.join(self.base_path, f"BaseDatasetOnRam_{self.test_or_train}_labels.pkl")
+        path_to_data = osp.join(self.base_path, f"BaseDatasetOnRam_{self.partition_name}_data.pkl")
+        path_to_labels = osp.join(self.base_path, f"BaseDatasetOnRam_{self.partition_name}_labels.pkl")
         if osp.isfile(path_to_data) and osp.isfile(path_to_labels):
             labels  = np.loadtxt(path_to_labels, delimiter=',', dtype=np.int64)
             L = len(labels)
@@ -229,8 +262,12 @@ class BaseDatasetOnRam(TensorDataset, BaseDataset):
 
 class TrainDatasetOnRam(BaseDatasetOnRam):
     def __init__(self, **kwargs):
-        super().__init__(test_or_train='train', **kwargs)
+        super().__init__(partition_name='train', **kwargs)
 
 class TestDatasetOnRam(BaseDatasetOnRam):
     def __init__(self, **kwargs):
-        super().__init__(test_or_train='test', **kwargs)
+        super().__init__(partition_name='test', **kwargs)
+
+class ValidationDatasetOnRam(BaseDatasetOnRam):
+    def __init__(self, **kwargs):
+        super().__init__(partition_name='validation', **kwargs)

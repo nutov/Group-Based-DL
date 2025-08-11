@@ -1,26 +1,21 @@
-import matplotlib
 import os
-from common import TRAIN_FLAG, N_EPOCHS
+
+import matplotlib
+
+from common import N_EPOCHS
 
 if os.name == 'nt':
     os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
     matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
 import numpy as np
 
 import data
 from viz import *
-# from models import *
-import os
 import torch
 import models
-from file_manager import SaveFig, logger, SaveData
+from file_manager import SaveFig, logger
 import utils
-from make_plots import plot_object_and_scores
-# import multiprocessing as mp
-# mp.set_start_method('spawn', force=True)
 
-import time
 
 
 data_n = int(256)
@@ -28,28 +23,41 @@ data_dim = int(3)
 
 def main():
 
-    # train_dataset = data.TrainDataset()
-    # test_dataset = data.TestDataset()
     train_dataset = data.TrainDatasetOnRam()
     test_dataset = data.TestDatasetOnRam()
+    validation_dataset = data.ValidationDatasetOnRam()
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=len(test_dataset), shuffle=True)
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
+    validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=len(validation_dataset), shuffle=False)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=len(test_dataset), shuffle=True)
 
-    model_list = [
-        models.BasePointCloudNet(),
-        models.CanonizationNet(),
-        models.SymmetrizationNet(),
-        models.SampledSymmetrizationNet(),
-        models.LinearEquivariantNet(),
-        # models.AugmentedInvariantNet()
-    ]
+    for k in (5, 10, 50, -1):
 
-    if TRAIN_FLAG:
+        logger.info(f"\n\nk =  {k}   start \n\n")
+
+        model_list = [
+            models.BasePointCloudNet(),
+            models.CanonizationNet(),
+            models.SymmetrizationNet(),
+            models.SampledSymmetrizationNet(),
+            models.LinearEquivariantNet(),
+            models.AugmentedNet()
+        ]
+
         optimizer_list = [torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4) for model in model_list]
-        train_acc, train_loss, test_acc, test_loss = utils.train(model_list, optimizer_list, train_dataloader, test_loader=test_dataloader, epochs=N_EPOCHS)
+        if k > 0:
+            training_subset = train_dataset.make_subset_for_training(k=k)
+            training_subset_loader = torch.utils.data.DataLoader(training_subset, batch_size=len(training_subset), shuffle=True)
+        else:
+            training_subset_loader = train_dataloader
+
+        train_acc, train_loss, test_acc, test_loss = utils.train(
+            model_list, optimizer_list, training_subset_loader, test_loader=test_dataloader, validation_loader=validation_dataloader, epochs=N_EPOCHS)
+
 
         # plot results
+        if k == -1:
+            k = 'all'
         colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink']
         markers = ['o', 'v', '^', '<', '>', 's', 'P']
         labels = ['Basic', 'Canonization', 'Symmetrization', 'Sampled Symmetrization', 'Equivariant', 'Augmented']
@@ -61,17 +69,19 @@ def main():
                 label=labels[i],
                 color=colors[i],
                 marker=markers[i],
-                linestyle='None',
+                linestyle='--',
                 markerfacecolor='none',
                 markeredgecolor=colors[i],
-            )
+                markevery=10,
+                )
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
-        plt.title('Train Loss per Epoch')
+        plt.title(f'Train Loss per Epoch  k={k}')
         plt.legend()
         plt.grid(True)
-        SaveFig("equivariant_model_train_loss")
-        plt.show()
+        SaveFig(f"k_{k}_equivariant_model_train_loss")
+        # plt.show()
+        plt.close()
 
         plt.figure(2)
         # Test Loss (markers only, filled)
@@ -81,17 +91,19 @@ def main():
                 label=labels[i],
                 color=colors[i],
                 marker=markers[i],
-                linestyle='None',
+                linestyle='-',
                 markerfacecolor=colors[i],
                 markeredgecolor=colors[i],
-            )
+                markevery=10,
+                )
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
-        plt.title('Test Loss per Epoch')
+        plt.title(f'Test Loss per Epoch  k={k}')
         plt.legend()
         plt.grid(True)
-        SaveFig("equivariant_model_test_loss")
-        plt.show()
+        SaveFig(f"k_{k}_equivariant_model_test_loss")
+        # plt.show()
+        plt.close()
 
         plt.figure(3)
         # Train Accuracy (markers only, hollow)
@@ -101,17 +113,18 @@ def main():
                 label=labels[i],
                 color=colors[i],
                 marker=markers[i],
-                linestyle='None',
+                linestyle='--',
                 markerfacecolor='none',
                 markeredgecolor=colors[i],
+                markevery=10,
             )
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
-        plt.title('Train Accuracy per Epoch')
+        plt.title(f'Train Accuracy per Epoch  k={k}')
         plt.legend()
         plt.ylim(-0.02, 1.02)
         plt.grid(True)
-        SaveFig("equivariant_model_train_accuracy_plot")
+        SaveFig(f"k_{k}_equivariant_model_train_accuracy")
         plt.show()
 
         plt.figure(4)
@@ -122,18 +135,20 @@ def main():
                 label=labels[i],
                 color=colors[i],
                 marker=markers[i],
-                linestyle='None',
+                linestyle='-',
                 markerfacecolor=colors[i],
                 markeredgecolor=colors[i],
+                markevery=10,
             )
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
-        plt.title('Test Accuracy per Epoch')
+        plt.title(f'Test Accuracy per Epoch  k={k}')
         plt.legend()
         plt.ylim(-0.02, 1.02)
         plt.grid(True)
-        SaveFig("equivariant_model_test_accuracy")
+        SaveFig(f"k_{k}_equivariant_model_test_accuracy")
         plt.show()
+        plt.close()
 
 
     # else:

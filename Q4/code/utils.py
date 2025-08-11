@@ -1,18 +1,12 @@
+import time
+import numpy as np
 import torch
 import torch.nn.functional as F
-import numpy as np
-from file_manager import logger, SaveData, TimeIt
 import models
-import viz
-import make_plots
-import matplotlib.pyplot as plt
-from file_manager import SaveFig
-from itertools import permutations
-import time
+from file_manager import logger, SaveData, TimeIt
 
-DEBUG_MODE = True
 
-def create_permutations_sampled(x:torch.tensor,K:int):
+def create_permutations_sampled(x:torch.Tensor, K:int):
     N = x.size()[0]
     for _ in range(K):
         yield np.random.permutation(N)
@@ -153,7 +147,7 @@ def test_equivariant_layer():
 #
 #
 @TimeIt
-def _basic_training(model, optimizer, target_label, in_data):
+def _basic_training(model :models.BasePointCloudNet, optimizer: torch.optim.Optimizer, target_label, in_data):
     # check that the model updates
     optimizer.zero_grad()
     output = model(in_data)
@@ -170,10 +164,9 @@ def _augmentation_f(data):
 def train(model_list,
           optimizer_list,
           train_loader,
-          test_loader=None,
-          epochs=100,
-          augmentations=0,
-          use_augmentation=False):
+          test_loader,
+          validation_loader,
+          epochs):
     """
     Train a model with optional data augmentation.
     :param model_list:
@@ -181,21 +174,19 @@ def train(model_list,
     :param train_loader:
     :param test_loader:
     :param epochs:
-    :param augmentations:
-    :param use_augmentation:
     :return:
-    Trained model, training accuracy, training loss, test accuracy, test loss.
+    Trained model, training accuracy, training loss, test accuracy, test loss, training time, evaluation time.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     n_models = len(model_list)
-
+    stop_training = [False for _ in range(n_models)]  # stop training if True
     train_loss = [[] for _ in range(n_models)]
     test_loss = [[] for _ in range(n_models)]
     train_acc = [[] for _ in range(n_models)]
     test_acc = [[] for _ in range(n_models)]
 
     # Timing containers
-    train_time_per_model_per_epoch = [[] for _ in range(n_models)]           # seconds per epoch per model
+    train_time_per_model_per_epoch = [[] for _ in range(n_models)]           # time [sec] per model (first index) per epoch (second index)
     eval_test_time = [[] for _ in range(n_models)]       # seconds to eval on test_loader
 
     for epoch in range(epochs):
@@ -206,24 +197,25 @@ def train(model_list,
             model.to(device)
 
         # Accumulate per-model training time over all batches in this epoch
-        per_model_train_times = [0.0 for _ in range(n_models)]
+        epoch_train_time_per_model = [0.0 for _ in range(n_models)]
 
         for inputs, target_labels in train_loader:
             inputs, target_labels = inputs.to(device), target_labels.to(device)
             for i, (model, optimizer) in enumerate(zip(model_list, optimizer_list)):
+                if stop_training[i]:
+                    continue
                 t0 = time.perf_counter()
                 if model.use_augmentation:                    
-                    for _ in range(augmentations):
+                    for _ in range(model.n_samples):
                         aug_inputs = _augmentation_f(inputs)
                         _basic_training(model, optimizer, target_labels, aug_inputs)
-                    per_model_train_times[i] += (time.perf_counter() - t0)
+                    epoch_train_time_per_model[i] += (time.perf_counter() - t0)
                 else:
                     _basic_training(model, optimizer, target_labels, inputs)
-                    per_model_train_times[i] += (time.perf_counter() - t0)
+                    epoch_train_time_per_model[i] += (time.perf_counter() - t0)
 
-        # Record training time per model for this epoch
         for i in range(n_models):
-            train_time_per_model_per_epoch[i].append(per_model_train_times[i])
+            train_time_per_model_per_epoch[i].append(epoch_train_time_per_model[i])
 
         for i, model in enumerate(model_list):
             # calculate metrics and measure eval time (train loader)
@@ -238,13 +230,21 @@ def train(model_list,
                 test_loss[i].append(_test_loss)
                 eval_test_time[i].append(eval_test_elapsed)
 
-            # Log timings summary for this epoch/model
-            logger.info(
-                f"Timing | Epoch {epoch} | {model.__class__.__name__}: "
-                f"train_time={train_time_per_model_per_epoch[i][-1]:.3f}s, "
-                f"eval_train_time={eval_train_time[i][-1]:.3f}s" +
-                (f", eval_test_time={eval_test_time[i][-1]:.3f}s" if test_loader else "")
-            )
+            # # Log timings summary for this epoch/model
+            # logger.info(
+            #     f"Timing | Epoch {epoch} | {model.__class__.__name__}: "
+            #     f"train_time={train_time_per_model_per_epoch[i][-1]:.3f}s, " +
+            #     (f", eval_test_time={eval_test_time[i][-1]:.3f}s" if test_loader else "")
+            # )
+
+    # write to loger finale results per model, including: average  training time, final accuracy on: training set, validation set, and test set,
+    average_training_time = np.mean(train_time_per_model_per_epoch, axis=1)  # train_time_per_model_per_epoch is n_models x n_epochs
+    for model in model_list:
+        logger.info(f"Average training time for {model.__class__.__name__}: {average_training_time[model_list.index(model)]:.8f} [sec]")
+    if test_loader:
+        average_evaluation_time = np.mean(eval_test_time, axis=1)
+        for model in model_list:
+            logger.info(f"Average evaluation time for {model.__class__.__name__}: {average_evaluation_time[model_list.index(model)]:.8f} [sec]")
 
     # save timing data
     SaveData(train_time_per_model_per_epoch, "train_time_per_epoch")
@@ -253,15 +253,16 @@ def train(model_list,
 
     return train_acc, train_loss, test_acc, test_loss
 
-# def test_variance_invariance(model,d=50, tol=1e-1, num_tests=100):
-#     device = "cuda" if torch.cuda.is_available() else "cpu"
-#     x = torch.randn((100,d)).to(device)
-#     model.eval()
-#     with torch.no_grad():
-#         y_ref = model(x)
-#         for _ in range(num_tests):
-#             perm = torch.randperm(x.size(0))
-#             y_alt = model(x[perm])
-#             if not torch.allclose(y_ref[perm], y_alt, atol=tol):
-#                 return False
-#     return True
+
+def test_variance_invariance(model: models.BasePointCloudNet, 
+                             d=50, tol=1e-1, num_tests=100):
+    x = torch.randn(size=(model.n, model.d_in), device=model.device, dtype=model.dtype)
+    model.eval()
+    with torch.no_grad():
+        y_ref = model(x)
+        for _ in range(num_tests):
+            perm = torch.randperm(x.size(0))
+            y_alt = model(x[perm])
+            if not torch.allclose(y_ref[perm], y_alt, atol=tol):
+                return False
+    return True

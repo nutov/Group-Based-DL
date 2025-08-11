@@ -4,5 +4,6 @@
 {
     "data_path": "<PUT YOUR ABSOLUTE DATA PATH HERE>",
     "train_data_preprocessed": false,
-    "test_data_preprocessed": false
+    "test_data_preprocessed": false,
+    "validation_data_preprocessed": false
 }

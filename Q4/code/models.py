@@ -3,7 +3,7 @@ from torch import nn
 import numpy as np
 from file_manager import DATA_DIR, logger, TimeIt
 import os.path as osp
-import torch.nn.functional as func
+import torch.nn.functional as F
 
 class BasePointCloudNet(nn.Module):
 
@@ -28,12 +28,15 @@ class BasePointCloudNet(nn.Module):
         self.use_augmentation = use_augmentation
         if device is None:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        logger.info(f"Initializing {self.__class__.__name__} with parameters:")
+        logger.info(f"Initializing {self.__class__.__name__}:")
         logger.info(f"n_in: {n_in}, d_in: {d_in}, d_out: {d_out}, device: {str(self.device)}")
         # Not used for the core MLP path anymore, but kept for other usages
         self.flatten = nn.Flatten(start_dim=-2)
 
-        if creates_weights:            
+        if creates_weights:
+            self.hidden1 *= 2
+            self.hidden2 *= 2
+
             self.mlp = nn.Sequential(
                 nn.Linear(in_features=d_in * n_in, out_features=self.hidden1),  # (d_in * n_in, hidden1)
                 nn.BatchNorm1d(self.hidden1),
@@ -56,6 +59,8 @@ class BasePointCloudNet(nn.Module):
             )
             self._init_weights()
             self.to(self.device)
+            logger.info(f"number of parameters = {self.number_of_parameters()}")
+
 
     def _init_weights(self):
         for m in self.modules():
@@ -73,11 +78,12 @@ class BasePointCloudNet(nn.Module):
 
     def forward(self, x):
         _x = self.process_input(x)
-        y = self.mlp(_x)
-        if self.training:
-            return y
-        else:
-            return func.softmax(y, dim=-1)  # Apply softmax to the output
+        return self.mlp(_x)
+
+
+    def apply_softmax(self, y):
+        """apply softmax on the output of the MLP y"""
+        return F.softmax(y, dim=-1)
 
     @TimeIt
     def save(self, path=None, version=None):
@@ -168,11 +174,13 @@ class SampledSymmetrizationNet(SymmetrizationNet):
             yield torch.randperm(self.n, device=self.device)
 
 
-class LinearEquivariantLayer(BasePointCloudNet):
-    def __init__(self, **kwargs):
-        super().__init__(n_in=1, creates_weights=False, **kwargs)
-        self.w1 = nn.Linear(self.d_in, self.d_out, device=self.device)
-        self.w2 = nn.Linear(self.d_in, self.d_out, device=self.device)
+class LinearEquivariantLayer(nn.Module):
+    def __init__(self, d_in, d_out, device=None):
+        super().__init__()
+        self.w1 = nn.Linear(d_in, d_out)
+        self.w2 = nn.Linear(d_in, d_out)
+        if device is not None:
+            self.to(device)
 
     def forward(self, x):
         # x: (*, n, 3)
@@ -201,20 +209,19 @@ class BatchNorm1dWithPermute(nn.Module):
 
 
 class LinearEquivariantNet(BasePointCloudNet):
-    def __init__(self, n_in=256, d_in=3, d_out=40):
-        super().__init__(n_in, d_in, d_out)
+    def __init__(self, d_in=3, d_out=40, **kwargs):
+        super().__init__(n_in=1, d_in=d_in, d_out=d_out, creates_weights=False, **kwargs)
         hidden1, hidden2, hidden3 = self.hidden1, self.hidden2, self.hidden3
-        self.hidden3 = hidden3 = 2 * hidden2
         self.equivariant_mpl = nn.Sequential(
-            LinearEquivariantLayer(d_in=d_in, d_out=hidden1),  # (d_in, hidden1)  input: (n, d_in), output: (n, hidden1)
+            LinearEquivariantLayer(d_in=d_in, d_out=hidden1, device=self.device),  # (d_in, hidden1)
             BatchNorm1dWithPermute(hidden1),
             nn.ReLU(),
             nn.Dropout(0.1),
-            LinearEquivariantLayer(d_in=hidden1, d_out=hidden2),  # (hidden1, hidden2)
+            LinearEquivariantLayer(d_in=hidden1, d_out=hidden2, device=self.device),  # (hidden1, hidden2)
             BatchNorm1dWithPermute(hidden2),
             nn.ReLU(),
             nn.Dropout(0.1),
-            LinearEquivariantLayer(d_in=hidden2, d_out=hidden3),  # (hidden2, hidden3)
+            LinearEquivariantLayer(d_in=hidden2, d_out=hidden3, device=self.device),  # (hidden2, hidden3)
             BatchNorm1dWithPermute(hidden3),
             nn.ReLU(),
             nn.Dropout(0.1),
@@ -232,6 +239,7 @@ class LinearEquivariantNet(BasePointCloudNet):
         )
         self._init_weights()
         self.to(self.device)
+        logger.info(f"number of parameters = {self.number_of_parameters()}")
 
 
 
@@ -255,121 +263,10 @@ class LinearEquivariantNet(BasePointCloudNet):
         max_pooled, _ = res_equivariant.max(dim=-2)
         pooled = torch.cat([mean_pooled, max_pooled], dim=-1)  # shape: (batch, 2*hidden3 = hidden4)
         # Adjust invariant_mpl input size if needed
-        result = self.invariant_mpl(pooled)  # (batch, d_out)
-        if self.training:
-            return result
-        else:
-            return func.softmax(result, dim=-1)
+        return self.invariant_mpl(pooled)  # (batch, d_out)
 
 
-
-# TODO: make AugmentedInvariantNet
-# class Canonization_Net(nn.Module):
-#     def __init__(self,d_in = 10):
-#         super().__init__()
-#         self.flatten = nn.Flatten()
-#         self.linear = nn.Sequential(
-#             nn.Linear(d_in, 32),
-#             nn.ReLU(),
-#             nn.Linear(32, 4)
-#         )
-#
-#     def forward(self, x: torch.tensor):
-#         """
-#         X - R^(Nxd)
-#         canonize by sorting w.r.t norms of the elements in the dataset ,
-#         this is permutation invariant
-#         """
-#         norms = torch.norm(x, d_in=0)
-#         _, idx = torch.sort(norms, descending=True, stable=True)
-#
-#         x = x[idx]
-#         x = self.flatten(x)
-#
-#         return self.linear(x)
-#
-#
-#
-# class Symmetrization_Net(nn.Module):
-#     def __init__(self,d = 10):
-#         super().__init__()
-#         self.flatten = nn.Flatten()
-#         self.linear = nn.Sequential(
-#             nn.Linear(d, 32),
-#             nn.ReLU(),
-#             nn.Linear(32, 4)
-#         )
-#
-#     def forward(self, x):
-#         N,_ = x.size()
-#         x_ = torch.zeros_like(self.linear(x))
-#         elemnts = [k for k in range(N)]
-#         for perm in permutations(elemnts):
-#             x_ += self.linear(x[perm,:])
-#         return x_
-#
-#
-#
-# class Sampled_Symmetrization_Net(nn.Module):
-#     def __init__(self,d = 10,num_samples = 20):
-#         super().__init__()
-#         self.flatten = nn.Flatten()
-#         self.linear = nn.Sequential(
-#             nn.Linear(d, 32),
-#             nn.ReLU(),
-#             nn.Linear(32, 4)
-#         )
-#         self.num_samples = num_samples
-#
-#     def forward(self, x):
-#         N,_ = x.size()
-#         x_ = torch.zeros_like(self.linear(x))
-#         it = create_permutations_sampled(x,self.num_samples)
-#         for perm in it:
-#             x_ += self.linear(x[perm,:])
-#
-#         return x_ / self.num_samples
-#
-#
-# class Linear_eq_layer(nn.Module):
-#     def __init__(self, d_in=10, d_hidden=32):
-#         super().__init__()
-#         self.w1 = nn.Linear(d_in,d_hidden)
-#         self.w2 = nn.Linear(d_in,d_hidden)
-#
-#
-#     def forward(self, x):  # x is (n, d_in)
-#         return self.w1(x) + self.w2(torch.unsqueeze(torch.sum(x,d_in=0),d_in=0))
-#
-#
-# class Linear_eq_Net(nn.Module):
-#     def __init__(self, d_in=10, d_hidden=32 , d_out = 4):
-#         super().__init__()
-#         self.equiv = nn.Sequential(Linear_eq_layer(d_in,d_hidden),
-#                                    nn.ReLU(),
-#                                    Linear_eq_layer(d_hidden,d_hidden)
-#         )
-#
-#         self.post_pool = nn.Sequential(
-#             nn.ReLU(),
-#             nn.Linear(d_hidden, d_out))
-#
-#
-#     def forward(self, x):  # x is (n, d_in)
-#         x_eq = self.equiv(x)
-#         x_pool = x_eq.sum(d_in=0)
-#         return self.post_pool(x_pool)
-#
-#
-# class AugmentedInvariantNet(nn.Module):
-#     def __init__(self, d=10, d_hidden=32):
-#         super().__init__()
-#         self.net = nn.Sequential(
-#             #nn.Flatten(),  # input shape (n, d) → (n*d,)
-#             nn.Linear(d , d_hidden),  # assuming n = 10
-#             nn.ReLU(),
-#             nn.Linear(d_hidden, 1)
-#         )
-#         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-#     def forward(self, x):
-#         return self.net(x)
+class AugmentedNet(BasePointCloudNet):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.use_augmentation = True

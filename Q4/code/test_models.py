@@ -107,7 +107,7 @@ class TestModelsPermutationInvariance(unittest.TestCase):
         n = 256
         d = 3
         tol = 1e-5
-        net = models.LinearEquivariantNet(n_in=n, d_in=d, d_out=40)
+        net = models.LinearEquivariantNet(d_in=d, d_out=40)
         net.eval()
         # make all the parameters to be random
         for m in net.modules():
