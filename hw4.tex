@@ -4,6 +4,7 @@
 \usepackage{xargs} % (moved option inside the square brackets)
 \usepackage{babel}
 \usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
 \usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{enumitem}
@@ -72,7 +73,7 @@ From condition \eqref{eq:Tcondition} we have
     \label{eq:rhoT}
 \end{equation}
 We can see that $\vec(T)$ is an eigenvector of $\rho(g) \otimes \rho(g)$ with eigenvalue 1 for all $g \in G$. 
-Moreover, let $\{O_1, ..., O_k\}$ be the orbits of the action of $G$ on $X^2$, where $k$ is the number of orbits; and let $\oneb_{O_i} \in \RF^{n\times n}$ be the indicator matrix of the orbit $O_i$, i.e. $\oneb_{O_i}(i,j) = 1$ if $(i,j) \in O_i$ and $0$ otherwise. 
+Moreover, let $\{O_1, ..., O_k\}$ be the orbits of the action of $G$ on $X^2$, where $k$ is the number of orbits; and let $\oneb_{O_i} \in \RF^{n\times n}$ be the indicator matrix of the orbit $O_i$, i.e. $\oneb_{O_i}(i,j) = 1" if "(i,j) \in O_i$ and $0$ otherwise. 
 Then, $\vec(\oneb_{O_i})$ must be an eigenvector of $\rho(g) \otimes \rho(g)$ with eigenvalue 1 for all $g \in G$ as well, since it is constant when $g$ acts on it.
 Define  $U^G = \{v \in \RF^{n\times n} \mid (\rho(g) \otimes \rho(g)) v = v, \text{for all } g \in G\}$, as the fixed subspace of $\RF^{n\times n}$ under the action of $G$. $U^G$ is isomorphic to the space of $G$-linear transformations $HOM_G(\RF^n,\RF^n)$. In the course we saw that the dimension of $U^G$ is equal $\tr(\pi_{U^G})$, where $\pi_{U^G}$ is the projection operator onto $U^G$. We showed that $\pi_{U^G} = \frac{1}{|G|} \sum_{g \in G} \rho(g) \otimes \rho(g)$, and therefore we have
 \begin{equation}
@@ -325,14 +326,14 @@ where $k=i_1+N_1(i_2-1)+N_1N_2(i_3-1)$. Define $k=i_1^{k}+N_1(i_2^{k}-1)+N_1N_2(
 and $l=i_1^{l}+N_1(i_2^{l}-1)+N_1N_2(i_3^{l}-1)$. We will
 have the same derivation as in the previous clause \ref{subsec:q21},
 thus 
-\begin{align*}
+\begin{align}
 W_{k,l} & =W_{g(k),g(l)}
-\end{align*}
+\end{align}
 The indexes $\left(k,l\right)$ can transform to 
-\begin{align*}
+\begin{align}
 k' & =g_1(i_1^{k})+N_1(g_2(i_2^{k})-1)+N_1N_2(g_3(i_3^{k})-1)\\
 l' & =g_1(i_1^{l})+N_1(g_2(i_2^{l})-1)+N_1N_2(g_3(i_3^{l})-1)
-\end{align*}
+\end{align}
 where the equivalence relations follow the same pattern as before,
 thus the orbits are 
 \begin{equation}
@@ -413,5 +414,72 @@ For $N_1=N_2=N_3=3$, we obtain $W\in\RF^{27\times27}$ and $b\in\RF^{27}$.
 
 %\input{q3.tex}
 
-\section*{Question 4 - 3D Shape Classification}  % question 4
+\section*{Question 4 - 3D Point Cloud Classification}  % question 4
+
+\subsection*{Description of the models}
+
+We have two architectures for the 3D point cloud classification. One is named BasePointCloudNet which, as the name suggests, is a base architecture for the point cloud classification which the following network use: canonization-based network, symmetrization based network, sample symmetrization based network, and augmentation-based network.
+The second architecture is called equivariant-based network, which is an invariance network with equivariant layers. The equivariant-based network is a more advanced architecture that account for permutation invariance of the point cloud data, intrinsically.
+The architecture of BasePointCloudNet is given in Figure \ref{fig:basePointCloudNetMLP}.
+
+\subsection*{BasePointCloudNet MLP architecture}
+\begin{figure}[h]
+\centering
+\newcommand{\npoints}{256}
+\newcommand{\din}{3}
+\newcommand{\dout}{40}
+\newcommand{\hOne}{128}
+\newcommand{\hTwo}{256}
+\newcommand{\hThree}{256}
+\newcommand{\dropoutp}{0.2}
+\begin{tikzpicture}[
+  layer/.style={draw, rounded corners, minimum width=40mm, minimum height=8mm, align=center},
+  >=stealth
+]
+\node[layer] (in) {Input $(n,d)$\\Flatten to $nd$};
+% Vertical layout: each block below the previous
+\node[layer, below=8mm of in]  (b1) {Linear $nd\to h_1$\\BN-ReLU-Dropout $p=\dropoutp$};
+\node[layer, below=8mm of b1] (b2) {Linear $h_1\to h_2$\\BN-ReLU-Dropout $p=\dropoutp$};
+\node[layer, below=8mm of b2] (b3) {Linear $h_2\to h_3$\\BN-ReLU-Dropout $p=\dropoutp$};
+% Optional pooling layer between third and fourth
+\node[layer, dashed, below=8mm of b3] (pool) {Optional Pooling\\(Max and Avg)};
+\node[layer, below=8mm of pool] (b4) {Linear $h_3\to h_2$\\BN-ReLU-Dropout $p=\dropoutp$};
+\node[layer, below=8mm of b4] (out){Linear $h_2\to d_{\text{out}}$\\Logits};
+\draw[->] (in) -- (b1);
+\draw[->] (b1) -- (b2);
+\draw[->] (b2) -- (b3);
+\draw[->] (b3) -- (pool);
+\draw[->] (pool) -- (b4);
+\draw[->] (b4) -- (out);
+% Place legend under the last node
+\node[below=6mm of out, align=left] (legend) {Typical sizes:
+$nd=\npoints\cdot\din$, $h_1=\hOne$, $h_2=\hTwo$, $h_3=\hThree$, $d_{\text{out}}=\dout$.};
+\end{tikzpicture}
+\caption{MLP used in BasePointCloudNet: flattened point cloud feeds a 5-layer MLP with BN, ReLU, Dropout, and an optional pooling layer between the 3rd and 4th layers.}
+\label{fig:basePointCloudNetMLP}
+\end{figure}
+
+The second architecture, the equivariant-based network, is the same as the BasePointCloudNet, but the first 3 layers are equivariant. Then max-pooling and mean-pooling are applied to the output of the equivariant layers, and the results are concatenated and fed to invariant two layers.
+In the equivariant-based network, the hidden layers are given by $h_1 = 64, h_2 = 128, h_3 = 256$. The number of parameters is 254248. In both architectures we used cross-entropy loss function. 
+
+For the architectures: symmetrization, sampled-symetrization, and augmentation, we used 
+
+
+We used a computer with RTX 2080 Ti GPU, with 12GB of memory and everything ran on it. The models run for 1000 epochs with the condition that the accuracy on the validation set will be more than 80\%, which no model achieved and therefore all the models under all the settings are considered to run out of time. The model was taken according to the best accuracy on the validation set.
+The data was split to 80\% training, 10\% validation, and 10\% test. From the test set a subset was taken according to the requirements in the question.
+
+\subsection*{Accuracy }
+
+% add figure: accuracy_vs_k.png
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{accuracy_vs_k.png}
+\caption{Accuracy of the models on the test set as a function of $k$ (the number of training example for each class)}
+\label{fig:accuracy_vs_k}
+\end{figure}
+
+
+\paragraph{Table of time co}
+
+
 \end{document}

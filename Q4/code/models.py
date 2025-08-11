@@ -24,7 +24,7 @@ class BasePointCloudNet(nn.Module):
         self.hidden1 = 64
         self.hidden2 = 128
         self.hidden3 = 256
-        self.n_samples = 2 ** 4  # must be a power of 2 and less than n_in
+        self.n_samples = 27  # must be a power of 2 and less than n_in
         self.use_augmentation = use_augmentation
         if device is None:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -41,20 +41,20 @@ class BasePointCloudNet(nn.Module):
                 nn.Linear(in_features=d_in * n_in, out_features=self.hidden1),  # (d_in * n_in, hidden1)
                 nn.BatchNorm1d(self.hidden1),
                 nn.ReLU(),
-                nn.Dropout(0.1),
+                nn.Dropout(0.2),
                 nn.Linear(in_features=self.hidden1, out_features=self.hidden2),  # (hidden1, hidden2)
                 nn.BatchNorm1d(self.hidden2),
                 nn.ReLU(),
-                nn.Dropout(0.1),
+                nn.Dropout(0.2),
                 nn.Linear(in_features=self.hidden2, out_features=self.hidden3),  # (hidden2, hidden3)
                 nn.BatchNorm1d(self.hidden3),
                 nn.ReLU(),
-                nn.Dropout(0.1),
+                nn.Dropout(0.2),
 
                 nn.Linear(in_features=self.hidden3, out_features=self.hidden2),  # (hidden3, hidden2)
                 nn.BatchNorm1d(self.hidden2),
                 nn.ReLU(),
-                nn.Dropout(0.1),
+                nn.Dropout(0.2),
                 nn.Linear(in_features=self.hidden2, out_features=self.d_out),  # (hidden2, d_out)
             )
             self._init_weights()
@@ -216,25 +216,25 @@ class LinearEquivariantNet(BasePointCloudNet):
             LinearEquivariantLayer(d_in=d_in, d_out=hidden1, device=self.device),  # (d_in, hidden1)
             BatchNorm1dWithPermute(hidden1),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.2),
             LinearEquivariantLayer(d_in=hidden1, d_out=hidden2, device=self.device),  # (hidden1, hidden2)
             BatchNorm1dWithPermute(hidden2),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.2),
             LinearEquivariantLayer(d_in=hidden2, d_out=hidden3, device=self.device),  # (hidden2, hidden3)
             BatchNorm1dWithPermute(hidden3),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.2),
         )
         self.invariant_mpl = nn.Sequential(
             nn.Linear(in_features=2*hidden3, out_features=hidden3),  # (2*hidden3, hidden3)
             nn.BatchNorm1d(hidden3),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.2),
             nn.Linear(in_features=hidden3, out_features=hidden2),  # (hidden3, hidden2)
             nn.BatchNorm1d(hidden2),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.2),
             nn.Linear(in_features=hidden2, out_features=self.d_out)  # (hidden2, d_out)
         )
         self._init_weights()

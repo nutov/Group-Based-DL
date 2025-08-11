@@ -31,7 +31,7 @@ def main():
     validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=len(validation_dataset), shuffle=False)
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=len(test_dataset), shuffle=True)
 
-    for k in (5, 10, 50, -1):
+    for k in (5, 10, 50, -1)[::-1]:  # -1 means all
 
         logger.info(f"\n\nk =  {k}   start \n\n")
 
@@ -52,12 +52,21 @@ def main():
             training_subset_loader = train_dataloader
 
         train_acc, train_loss, test_acc, test_loss = utils.train(
-            model_list, optimizer_list, training_subset_loader, test_loader=test_dataloader, validation_loader=validation_dataloader, epochs=N_EPOCHS)
+            model_list,
+            optimizer_list,
+            training_subset_loader,
+            test_loader=test_dataloader,
+            validation_loader=validation_dataloader,
+            epochs=N_EPOCHS,
+            k=k
+        )
 
-
+        longers_result = max(len(train_loss[i]) for i in range(len(model_list)))
         # plot results
         if k == -1:
             k = 'all'
+        # Use ~20 markers on the longest series
+        mark_step = max(1, longers_result // 20)
         colors = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink']
         markers = ['o', 'v', '^', '<', '>', 's', 'P']
         labels = ['Basic', 'Canonization', 'Symmetrization', 'Sampled Symmetrization', 'Equivariant', 'Augmented']
@@ -72,7 +81,7 @@ def main():
                 linestyle='--',
                 markerfacecolor='none',
                 markeredgecolor=colors[i],
-                markevery=10,
+                markevery=mark_step,
                 )
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
@@ -94,7 +103,7 @@ def main():
                 linestyle='-',
                 markerfacecolor=colors[i],
                 markeredgecolor=colors[i],
-                markevery=10,
+                markevery=mark_step,
                 )
         plt.xlabel('Epochs')
         plt.ylabel('Loss')
@@ -116,7 +125,7 @@ def main():
                 linestyle='--',
                 markerfacecolor='none',
                 markeredgecolor=colors[i],
-                markevery=10,
+                markevery=mark_step,
             )
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
@@ -138,7 +147,7 @@ def main():
                 linestyle='-',
                 markerfacecolor=colors[i],
                 markeredgecolor=colors[i],
-                markevery=10,
+                markevery=mark_step,
             )
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')

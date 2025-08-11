@@ -65,8 +65,8 @@ def calculate_accuracy_and_loss(model: torch.nn.Module, data_loader: torch.utils
     :param data_loader: DataLoader containing the dataset.
     :return: Tuple (accuracy, avg_loss).
     """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # model.to(device)
     model.eval()
 
     correct = 0.0
@@ -75,7 +75,7 @@ def calculate_accuracy_and_loss(model: torch.nn.Module, data_loader: torch.utils
 
     with torch.no_grad():
         for inputs, target_labels in data_loader:
-            inputs, target_labels = inputs.to(device), target_labels.to(device)
+            # inputs, target_labels = inputs.to(device), target_labels.to(device)
             outputs = model(inputs)
             loss = F.cross_entropy(outputs, target_labels)
             _, predicted = torch.max(outputs, 1)
@@ -85,8 +85,6 @@ def calculate_accuracy_and_loss(model: torch.nn.Module, data_loader: torch.utils
 
     accuracy = correct / total if total > 0. else 0.0
     avg_loss = total_loss / total if total > 0. else float('inf')
-    logger.info(f"Accuracy, Loss of {model.__class__.__name__} on {data_loader.dataset.__class__.__name__} | {accuracy:.4f}, Avg Loss: {avg_loss:.4f}")
-
     return accuracy, avg_loss
 
 #
@@ -166,7 +164,8 @@ def train(model_list,
           train_loader,
           test_loader,
           validation_loader,
-          epochs):
+          epochs,
+          k):
     """
     Train a model with optional data augmentation.
     :param model_list:
@@ -182,12 +181,14 @@ def train(model_list,
     stop_training = [False for _ in range(n_models)]  # stop training if True
     train_loss = [[] for _ in range(n_models)]
     test_loss = [[] for _ in range(n_models)]
+    validation_loss = [[] for _ in range(n_models)]
     train_acc = [[] for _ in range(n_models)]
     test_acc = [[] for _ in range(n_models)]
+    validation_acc = [[] for _ in range(n_models)]
 
     # Timing containers
     train_time_per_model_per_epoch = [[] for _ in range(n_models)]           # time [sec] per model (first index) per epoch (second index)
-    eval_test_time = [[] for _ in range(n_models)]       # seconds to eval on test_loader
+    eval_time_per_model_per_epoch = [[] for _ in range(n_models)]            # total eval time (train+val+test) per epoch per model
 
     for epoch in range(epochs):
 
@@ -218,38 +219,63 @@ def train(model_list,
             train_time_per_model_per_epoch[i].append(epoch_train_time_per_model[i])
 
         for i, model in enumerate(model_list):
-            # calculate metrics and measure eval time (train loader)
+            # total eval time across train/val/test
+            t_eval0 = time.perf_counter()
+            # calculate metrics (train)
+            msg = f"{model.__class__.__name__} | Epoch {epoch} |  "
             _acc, _loss = calculate_accuracy_and_loss(model, train_loader)
+            msg += f"Train accuracy: {_acc:.4f} |  "
+            # If the accuracy on the training is almost 1, the loss is very small and in any what not useful, we stop training this model
+            # if _acc > 0.99:
+            #     stop_training[i] = True
             train_acc[i].append(_acc)
             train_loss[i].append(_loss)
-            if test_loader:
-                t0_eval_test = time.perf_counter()
-                _test_acc, _test_loss = calculate_accuracy_and_loss(model, test_loader)
-                eval_test_elapsed = time.perf_counter() - t0_eval_test
-                test_acc[i].append(_test_acc)
-                test_loss[i].append(_test_loss)
-                eval_test_time[i].append(eval_test_elapsed)
-
-            # # Log timings summary for this epoch/model
-            # logger.info(
-            #     f"Timing | Epoch {epoch} | {model.__class__.__name__}: "
-            #     f"train_time={train_time_per_model_per_epoch[i][-1]:.3f}s, " +
-            #     (f", eval_test_time={eval_test_time[i][-1]:.3f}s" if test_loader else "")
-            # )
+            # calculate metrics (validation)
+            _acc, _loss = calculate_accuracy_and_loss(model, validation_loader)
+            msg += f"Validation accuracy: {_acc:.4f} |  "
+            msg += f"Validation accuracy: {_acc:.4f} |  "
+            if (k==-1) and (_acc > 0.8) or (k != -1 and _acc > 0.6):
+                stop_training[i] = True
+            validation_acc[i].append(_acc)
+            validation_loss[i].append(_loss)
+            # calculate metrics (test)
+            _acc, _loss = calculate_accuracy_and_loss(model, test_loader)
+            msg += f"Test accuracy: {_acc:.4f} |  "
+            test_acc[i].append(_acc)
+            test_loss[i].append(_loss)
+            logger.info(msg=msg)
+            # close eval timer
+            eval_time_per_model_per_epoch[i].append(time.perf_counter() - t_eval0)
 
     # write to loger finale results per model, including: average  training time, final accuracy on: training set, validation set, and test set,
     average_training_time = np.mean(train_time_per_model_per_epoch, axis=1)  # train_time_per_model_per_epoch is n_models x n_epochs
+    average_eval_time = np.mean(eval_time_per_model_per_epoch, axis=1)       # average total eval time per model
+    logger.info(f"Final results for k = {k}:\n")
+    for i, model in enumerate(model_list):
+        logger.info(f"Model: {model.__class__.__name__} |\t\t"
+                    f"average training time: {average_training_time[i]:.8f} [sec] |\t\t"
+                    f"average evaluation time: {average_eval_time[i]:.8f} [sec] |\t\t"
+                    f"number of epochs: {len(train_acc[i])} |\t\t"
+                    f"training accuracy: {train_acc[i][-1]:.4f} |\t\t"
+                    f"validation accuracy: {validation_acc[i][-1]:.4f} |\t\t"
+                    f"test accuracy: {test_acc[i][-1]:.4f} |\t\t"
+                    f"training loss: {train_loss[i][-1]:.4f} |\t\t"
+                    f"validation loss: {validation_loss[i][-1]:.4f} |\t\t"
+                    f"test loss: {test_loss[i][-1]:.4f} |\t\t"
+                    f"out of time: {not stop_training[i]}")
+    # save data
+    k_tag = 'all' if k == -1 else str(k)
+    SaveData(train_time_per_model_per_epoch, f"train_time_per_epoch_k_{k_tag}")
+    SaveData(eval_time_per_model_per_epoch, f"eval_time_per_epoch_k_{k_tag}")
+    SaveData(train_acc, f"train_accuracy_per_epoch_k_{k_tag}")
+    SaveData(train_loss, f"train_loss_per_epoch_k_{k_tag}")
+    SaveData(validation_acc, f"validation_accuracy_per_epoch_k_{k_tag}")
+    SaveData(validation_loss, f"validation_loss_per_epoch_k_{k_tag}")
+    SaveData(test_acc, f"test_accuracy_per_epoch_k_{k_tag}")
+    SaveData(test_loss, f"test_loss_per_epoch_k_{k_tag}")
+    # save all models
     for model in model_list:
-        logger.info(f"Average training time for {model.__class__.__name__}: {average_training_time[model_list.index(model)]:.8f} [sec]")
-    if test_loader:
-        average_evaluation_time = np.mean(eval_test_time, axis=1)
-        for model in model_list:
-            logger.info(f"Average evaluation time for {model.__class__.__name__}: {average_evaluation_time[model_list.index(model)]:.8f} [sec]")
-
-    # save timing data
-    SaveData(train_time_per_model_per_epoch, "train_time_per_epoch")
-    if test_loader:
-        SaveData(eval_test_time, "eval_test_time_per_epoch")
+        model.save(version=k_tag)
 
     return train_acc, train_loss, test_acc, test_loss
 
